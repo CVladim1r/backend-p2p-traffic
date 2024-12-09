@@ -3,7 +3,7 @@ from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 from aiohttp import ClientSession
 
-BOT_TOKEN = "your-telegram-bot-token"
+BOT_TOKEN = "1159610274:AAGBon45ggqrWMmdT8mDq_QTXnq0n95JXe8"
 MINIAPP_URL = "https://example.com/miniapp"
 METRICS_API = "http://localhost:8000/metrics"
 

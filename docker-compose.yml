@@ -23,7 +23,7 @@ services:
     depends_on:
       - backend
     environment:
-      - BOT_API_KEY=your_api_key
+      - BOT_API_KEY="1159610274:AAGBon45ggqrWMmdT8mDq_QTXnq0n95JXe8"
     networks:
       - backend_network
 
