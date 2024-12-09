@@ -1,4 +1,5 @@
 version: "3.8"
+
 services:
   backend:
     build:
@@ -10,6 +11,9 @@ services:
       - db
     environment:
       - TORTOISE_ORM=back.main.TORTOISE_ORM
+      - DATABASE_URL=postgres://postgres:q1q1q1q1@db:5432/metrics_db
+    networks:
+      - backend_network
 
   bot:
     build:
@@ -18,12 +22,27 @@ services:
     command: ["python", "bot/bot.py"]
     depends_on:
       - backend
+    environment:
+      - BOT_API_KEY=your_api_key
+    networks:
+      - backend_network
 
   db:
     image: postgres:15
     environment:
-      POSTGRES_USER: gamaun
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: q1q1q1q1
       POSTGRES_DB: metrics_db
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - backend_network
+
+volumes:
+  postgres_data:
+
+networks:
+  backend_network:
+    driver: bridge

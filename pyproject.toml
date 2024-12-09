@@ -1,13 +1,14 @@
 [tool.poetry]
-name = "p2p-platfor-project"
+name = "p2p-platform"
 version = "0.1.0"
 description = "Back p2p traffic platform"
 authors = ["CodeArtistanse"]
 
 [tool.poetry.dependencies]
-python = "^3.11"
-fastapi = "^0.95.0"
+python = "^3.11.11"
+fastapi = "<0.96.0"
 tortoise-orm = "^0.19.0"
+pydantic = "2.9.2"
 aiogram = "^3.15.0"
 aiohttp = "^3.8.1"
 uvicorn = "^0.22.0"
