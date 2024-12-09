@@ -1,1 +1,1 @@
-from .metrics import Metrics # noqa
+from .metrics import Metric # noqa
