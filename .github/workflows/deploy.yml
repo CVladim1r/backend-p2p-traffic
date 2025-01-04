@@ -1,0 +1,31 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up SSH
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y docker.io docker-compose
+
+    - name: Deploy to Server
+      run: |
+        ssh -o StrictHostKeyChecking=no user@your-server "cd /var/www/my_project && git pull && docker-compose up -d --build"
