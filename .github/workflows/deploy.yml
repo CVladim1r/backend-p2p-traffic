@@ -26,6 +26,6 @@ jobs:
     #     sudo apt update
     #     sudo apt install -y docker.io docker-compose
 
-    - name: Deploy to Server
-      run: |
-        ssh -o StrictHostKeyChecking=no user@your-server "cd /var/www/my_project && git pull && docker-compose up -d --build"
+    - name: Deploy to server
+        run: |
+          ssh -o StrictHostKeyChecking=no root@85.193.86.224 "cd /var/www/my_project && git pull && docker-compose up -d --build"
