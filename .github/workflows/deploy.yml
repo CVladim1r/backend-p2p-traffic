@@ -21,10 +21,10 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-    - name: Install dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y docker.io docker-compose
+    # - name: Install dependencies
+    #   run: |
+    #     sudo apt update
+    #     sudo apt install -y docker.io docker-compose
 
     - name: Deploy to Server
       run: |
