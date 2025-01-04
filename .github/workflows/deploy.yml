@@ -22,10 +22,6 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: update
-        run: |
-          sudo apt update
-
       - name: Deploy to server
         run: |
           ssh -o StrictHostKeyChecking=no root@85.193.86.224 "cd /var/www/my_project && git pull && docker-compose up -d --build"
