@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: deploy
 
 on:
   push:
@@ -8,20 +8,39 @@ on:
     branches:
       - main
 
-
 jobs:
   deploy:
+    name: Deploy to Server
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Set up SSH
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Deploy to server
+      - name: Configure SSH
         run: |
-          ssh -o StrictHostKeyChecking=no root@85.193.86.224 "cd /var/www/my_project && git pull && docker-compose up -d --build"
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Transfer files to server
+        run: |
+          rsync -avz --exclude=".git" --exclude=".github" ./ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:~/app/
+
+      - name: Deploy on server
+        run: |
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << EOF
+          cd ~/app/
+          export POSTGRES_USER=${{ secrets.POSTGRES_USER }}
+          export POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          export POSTGRES_DB=${{ secrets.POSTGRES_DB }}
+          export BOT_TOKEN=${{ secrets.BOT_TOKEN }}
+          docker-compose pull
+          docker-compose up -d --build
+          docker-compose ps
+          EOF
+
+      - name: Cleanup SSH keys
+        if: always()
+        run: rm -rf ~/.ssh
