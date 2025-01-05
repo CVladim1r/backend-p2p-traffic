@@ -1,24 +1,24 @@
 version: "3.8"
 
 services:
-  postgres:
-    image: postgres:16
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_PORT=${POSTGRES_PORT}
-      - POSTGRES_HOST=postgres
-      - POSTGRES_DB=${POSTGRES_DB}
-    volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./db:/var/lib/postgresql/data
-    networks:
-      - backend_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 3s
-      retries: 3
+  # postgres:
+  #   image: postgres:16
+  #   environment:
+  #     - POSTGRES_USER=${POSTGRES_USER}
+  #     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+  #     - POSTGRES_PORT=${POSTGRES_PORT}
+  #     - POSTGRES_HOST=postgres
+  #     - POSTGRES_DB=${POSTGRES_DB}
+  #   volumes:
+  #     - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+  #     - ./db:/var/lib/postgresql/data
+  #   networks:
+  #     - backend_network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 3
 
   migrate:
     build:
