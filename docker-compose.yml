@@ -7,11 +7,11 @@ services:
       dockerfile: Dockerfile
     command: /bin/bash -c "aerich init-db || echo 'Database already initialized'; aerich upgrade"
     environment:
-      - POSTGRES_USER=gen_user
+      - POSTGRES_USER=gamaun
       - POSTGRES_PASSWORD=q1q1q1q1
       - POSTGRES_PORT=5432
       - POSTGRES_HOST=213.109.204.88
-      - POSTGRES_DB=p2p-database
+      - POSTGRES_DB=p2p_db
     networks:
       - backend_network
 
@@ -27,7 +27,7 @@ services:
     command: /bin/bash -c "while ! nc -z 213.109.204.88 5432; do sleep 1; done; python -m uvicorn back.main:app --host 0.0.0.0 --port 9100 --workers 2 --limit-max-requests 10000"
     environment:
       - TORTOISE_ORM=back.main.TORTOISE_ORM
-      - DATABASE_URL=postgres://gen_user:q1q1q1q1@213.109.204.88:5432/p2p-database
+      - DATABASE_URL=postgres://gamaun:q1q1q1q1@213.109.204.88:5432/p2p_db
     networks:
       - backend_network
 
