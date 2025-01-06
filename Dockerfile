@@ -3,7 +3,7 @@ FROM python:3.12-slim
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Ensure DNS resolution works
-RUN echo "nameserver 8.8.8.8" > /etc/resolv.conf
+RUN echo "options ndots:0" > /etc/resolvconf/resolv.conf.d/base
 
 # Update and install dependencies with retries
 RUN apt-get update -o Acquire::Retries=5 && apt-get install -y --no-install-recommends \
