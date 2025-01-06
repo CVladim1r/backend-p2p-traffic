@@ -8,10 +8,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 
-RUN python -m ensurepip --upgrade && pip install --no-cache-dir --upgrade pip setuptools wheel
-
-RUN pip install poetry==1.8.5
-
+RUN python -m ensurepip --upgrade && \
+    pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install poetry==1.8.5
+    
 WORKDIR /app
 
 COPY pyproject.toml poetry.lock ./

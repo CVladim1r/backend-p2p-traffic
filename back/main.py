@@ -9,11 +9,18 @@ load_dotenv()
 
 DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
-DB_USER = os.getenv("POSTGRES_USER", "postgres")
-DB_PASS = os.getenv("POSTGRES_PASSWORD", "q1q1q1q1")
-DB_PORT = os.getenv("POSTGRES_PORT", "5432")
-DB_HOST = os.getenv("POSTGRES_HOST", "localhost")
-DB_NAME = os.getenv("POSTGRES_DB", "metrics_db")
+print("Loaded Environment Variables:")
+print(f"POSTGRES_USER: {os.getenv('POSTGRES_USER')}")
+print(f"POSTGRES_PASSWORD: {os.getenv('POSTGRES_PASSWORD')}")
+print(f"POSTGRES_PORT: {os.getenv('POSTGRES_PORT')}")
+print(f"POSTGRES_HOST: {os.getenv('POSTGRES_HOST')}")
+print(f"POSTGRES_DB: {os.getenv('POSTGRES_DB')}")
+
+DB_USER = os.getenv("POSTGRES_USER")
+DB_PASS = os.getenv("POSTGRES_PASSWORD")
+DB_PORT = os.getenv("POSTGRES_PORT")
+DB_HOST = os.getenv("POSTGRES_HOST")
+DB_NAME = os.getenv("POSTGRES_DB")
 DB_URL = f"postgres://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 app = FastAPI(
@@ -29,7 +36,7 @@ register_tortoise(
     app,
     db_url=DB_URL,
     modules={"models": ["back.models", "aerich.models"]},
-    generate_schemas=True,
+    generate_schemas=False,
     add_exception_handlers=True,
 )
 
