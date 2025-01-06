@@ -10,7 +10,7 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 MINIAPP_URL = os.getenv("MINIAPP_URL")
-METRICS_API = os.getenv("METRICS_API", "http://localhost:8000/metrics")
+METRICS_API = os.getenv("BACK_METRICS_API", "http://localhost:8000/metrics")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
