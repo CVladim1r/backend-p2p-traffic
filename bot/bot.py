@@ -1,16 +1,18 @@
-
 import os
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 from aiohttp import ClientSession
 from dotenv import load_dotenv
+import logging
 
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 MINIAPP_URL = os.getenv("MINIAPP_URL")
 METRICS_API = os.getenv("BACK_METRICS_API", "http://localhost:8000/metrics")
+
+logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
@@ -21,13 +23,14 @@ async def start(message: Message):
         try:
             await session.post(METRICS_API, json={"event_type": "start", "user_id": str(message.from_user.id)})
         except Exception as e:
-            print(f"Error posting metrics: {e}")
+            logging.error(f"Error posting metrics: {e}")
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="Открыть MiniApp", url=MINIAPP_URL)]
         ]
     )
+
     await message.answer(
         "🎉 Горячо приветствуем тебя, дружище!👋\n\n"
         "P2P JUST-AD- это 🚀 уникальная маркетинговая экосистема по купле-продаже рекламы, "
@@ -39,8 +42,9 @@ async def start(message: Message):
         "💰 4. Мега-удобная оплата: примем любую твою криптовалюту.\n"
         "📈 5. Большущая клиентская база, которая с каждым днем становится все упитаннее, увеличивая колоссальный спрос на рекламу 📊.\n"
         "Если ты ставишь в приоритет быстроту, комфорт и надежный результат, то наш маркетплейс закроет все эти потребности на 5+.\n\n"
-        "Давай начнем твое путешествие прямо сейчас! 🚀\n", reply_markup=keyboard)
-    
+        "Давай начнем твое путешествие прямо сейчас! 🚀\n", reply_markup=keyboard
+    )
+
 
 async def main():
     await dp.start_polling(bot)
