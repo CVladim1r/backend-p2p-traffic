@@ -1,6 +1,12 @@
 FROM python:3.12-slim
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update || (echo "nameserver 8.8.8.8" > /etc/resolv.conf && apt-get update)
+
+RUN apt-get install -y --no-install-recommends \
+    apt-transport-https \
+    ca-certificates \
     build-essential \
     netcat-openbsd \
     && apt-get clean \
