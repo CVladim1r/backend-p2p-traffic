@@ -7,11 +7,11 @@ services:
       dockerfile: Dockerfile
     command: /bin/bash -c "aerich init-db || echo 'Database already initialized'; aerich upgrade"
     environment:
-      - POSTGRES_USER=gen_user
+      - POSTGRES_USER=gamaun
       - POSTGRES_PASSWORD=q1q1q1q1
       - POSTGRES_PORT=5432
       - POSTGRES_HOST=213.109.204.88
-      - POSTGRES_DB=p2p-database
+      - POSTGRES_DB=p2p_db
     networks:
       - backend_network
 
