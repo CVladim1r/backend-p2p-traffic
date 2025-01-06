@@ -2,9 +2,13 @@ FROM python:3.12-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    curl \
     netcat-openbsd \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
+
+
+RUN python -m ensurepip --upgrade && pip install --no-cache-dir --upgrade pip setuptools wheel
 
 RUN pip install poetry==1.8.5
 
@@ -19,7 +23,7 @@ COPY ./ ./
 # COPY ./back ./back
 # COPY ./bot ./bot
 
-ENV PYTHONPATH=/api
+ENV PYTHONPATH=/app
 
 
 CMD ["poetry", "run", "uvicorn", "back.main:app", "--host", "0.0.0.0", "--port", "8000"]
