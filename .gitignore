@@ -6,6 +6,8 @@ __pycache__/
 # C extensions
 *.so
 
+p2p-platform-0SzY8zp0-py3.12/
+
 # Distribution / packaging
 .Python
 build/
