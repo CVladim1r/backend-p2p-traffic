@@ -6,16 +6,16 @@ load_dotenv()
 
 debug = os.getenv("DEBUG", False)
 
-db_user = os.getenv("POSTGRES_USER", "postgres")
-db_pass = os.getenv("POSTGRES_PASSWORD", "q1q1q1q1")
-db_port = os.getenv("POSTGRES_PORT", "5432")
-db_host = os.getenv("POSTGRES_HOST", "localhost")
-db_name = os.getenv("POSTGRES_DB", "metrics_db")
-db_url = f"postgres://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
+DB_USER = os.getenv("POSTGRES_USER")
+DB_PASS = os.getenv("POSTGRES_PASSWORD")
+DB_PORT = os.getenv("POSTGRES_PORT")
+DB_HOST = os.getenv("POSTGRES_HOST")
+DB_NAME = os.getenv("POSTGRES_DB")
+DB_URL = f"postgres://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 TORTOISE_ORM = {
     "connections": {
-        "default": db_url,
+        "default": DB_URL,
     },
     "apps": {
         "models": {
