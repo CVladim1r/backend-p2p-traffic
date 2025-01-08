@@ -1,50 +1,21 @@
-import os
-from fastapi import FastAPI
-from tortoise.contrib.fastapi import register_tortoise
-from dotenv import load_dotenv
+import logging
+import uvicorn
 
-from back.routers import metrics
+from back.config import debug
 
-load_dotenv()
+log_config = uvicorn.config.LOGGING_CONFIG
+log_config["formatters"]["access"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
+log_config["formatters"]["default"]["fmt"] = "%(asctime)s - %(levelname)s - %(message)s"
 
-DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
-DB_USER = os.getenv("POSTGRES_USER")
-DB_PASS = os.getenv("POSTGRES_PASSWORD")
-DB_PORT = os.getenv("POSTGRES_PORT")
-DB_HOST = os.getenv("POSTGRES_HOST")
-DB_NAME = os.getenv("POSTGRES_DB")
-DB_URL = f"postgres://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-
-app = FastAPI(
-    title="Metrics Backend",
-    description="Backend service for metrics tracking.",
-    version="1.0.0",
-    debug=DEBUG,
-)
-
-app.include_router(metrics.router)
-
-register_tortoise(
-    app,
-    db_url=DB_URL,
-    modules={"models": ["back.models", "aerich.models"]},
-    generate_schemas=False,
-    add_exception_handlers=True,
-)
-
-TORTOISE_ORM = {
-    "connections": {"default": DB_URL},
-    "apps": {
-        "models": {
-            "models": ["back.models", "aerich.models"],
-            "default_connection": "default",
-        },
-    },
-    "use_tz": True,
-    "timezone": "UTC",
-}
-
-@app.get("/", summary="Root Endpoint", description="Check API health")
-async def root():
-    return {"message": "Metrics Backend is running"}
+if __name__ == "__main__":
+    logging.info("Application GATEWAY RUN ")
+    uvicorn.run(
+        "app:app",
+        host="0.0.0.0",
+        port=9100,
+        reload=debug,
+        workers=1,
+        log_config=log_config,
+        reload_dirs=["./"],
+    )

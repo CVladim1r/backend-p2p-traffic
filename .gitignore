@@ -6,6 +6,10 @@ __pycache__/
 
 p2p-platform-0SzY8zp0-py3.12/
 
+security/
+api.crt
+api.pem
+
 .Python
 build/
 develop-eggs/

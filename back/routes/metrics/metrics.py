@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends
 from back.models.metrics import Metric
+from back.auth.auth import JWTBearer
 
-router = APIRouter(prefix="/metrics", tags=["Metrics"])
+router = APIRouter(dependencies=[Depends(JWTBearer())])
 
 @router.post("/")
 async def create_metric(event_type: str, user_id: str = None):
