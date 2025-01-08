@@ -1,6 +1,6 @@
 import os
 from aiogram import Bot, Dispatcher
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.filters import Command
 from aiohttp import ClientSession
 from dotenv import load_dotenv
@@ -27,7 +27,7 @@ async def start(message: Message):
 
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="Открыть MiniApp", url=MINIAPP_URL)]
+            [InlineKeyboardButton(text="Открыть MiniApp", web_app=WebAppInfo(url=MINIAPP_URL))]
         ]
     )
 
