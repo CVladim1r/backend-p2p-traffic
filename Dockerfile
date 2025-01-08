@@ -26,4 +26,4 @@ COPY ./ ./
 ENV PYTHONPATH=/app
 
 
-CMD ["poetry", "run", "uvicorn", "back.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "uvicorn", "back.app:app", "--host", "0.0.0.0", "--port", "9100", "--workers", "2", "--limit-max-requests", "10000"]
