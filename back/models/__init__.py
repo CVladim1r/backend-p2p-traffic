@@ -1,2 +1,4 @@
 from .metrics import Metric # noqa
-from .user import User # noqa
+from .users import Users # noqa
+from .ads import Deals, Ads # noqa
+from .reviews import Reviews # noqa
