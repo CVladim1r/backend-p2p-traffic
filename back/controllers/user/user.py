@@ -5,8 +5,10 @@ from tortoise.exceptions import DoesNotExist
 from tortoise.transactions import in_transaction
 
 from back.controllers.base import BaseUserController, T
-from back.errors import APIExceptionModel
+from back.errors import APIExceptionModel, APIException
 from back.models import Users
+
+import logging
 
 
 class UserController(BaseUserController):
@@ -34,13 +36,18 @@ class UserController(BaseUserController):
         try:
             user = await Users.get(tg_id=tg_id)
         except DoesNotExist:
-            user = await Users.create(
-                tg_id=tg_id,
-                username=username,
-                is_premium=is_premium,
-                rating=0.00,
-                is_vip=False,
-                last_login=datetime.now(timezone.utc),
-                created_at=datetime.now(timezone.utc),
-            )
+            try:
+                user = await Users.create(
+                    tg_id=tg_id,
+                    username=username,
+                    is_premium=is_premium,
+                    rating=0.00,
+                    is_vip=False,
+                    last_login=datetime.now(timezone.utc),
+                    created_at=datetime.now(timezone.utc),
+                )
+                logging.info(f"User created successfully: {tg_id}, {username}")
+            except Exception as error:
+                logging.error(f"Error creating user {tg_id}, {username}: {error}")
+                raise APIException(f"Create user failed: {error}", 400)
         return user

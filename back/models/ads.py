@@ -3,6 +3,7 @@ from tortoise import fields, models
 
 from .enums import AdStatus, Categories, DealStatus
 
+
 ''' Объявления, сделки only''' # remove in code review
 class Ads(models.Model):
     uuid = fields.UUIDField(pk=True, default=uuid4, unique=True)

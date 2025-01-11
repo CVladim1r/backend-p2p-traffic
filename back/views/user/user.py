@@ -14,7 +14,7 @@ class UserMainPageOut(BaseModel):
     uuid: UUID
     tg_id: int
     username: str | None
-    # profile_photo: str | None
+
     rating: float
     balance: float
     total_sales: float
@@ -33,7 +33,7 @@ class UserMainData(BaseModel):
     uuid: UUID
     tg_id: int
     username: str | None
-    # profile_photo: str | None
+
     rating: float
     balance: float
     total_sales: float
