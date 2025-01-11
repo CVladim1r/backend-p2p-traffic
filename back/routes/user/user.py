@@ -24,9 +24,7 @@ async def create_user(
 ) -> StartUserOut:
     
     logging.info(f"Incoming create_user request: {user_data.dict()}")
-
     logging.info(f"----------------")
-
     logging.info(f"Incoming create_user request: {user_data}")
 
     if user_in.tg_id != user_data.tg_id:
@@ -38,4 +36,5 @@ async def create_user(
     except Exception as error:
         logging.error(f"Error creating user {user_data.tg_id}, {user_data.username}")
         raise APIException(f"Create user {error=}", 400)
+
 

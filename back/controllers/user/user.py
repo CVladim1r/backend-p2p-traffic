@@ -29,7 +29,7 @@ class UserController(BaseUserController):
     async def update_user_data(cls, tg_id: int, update_data: Dict[str, Any]) -> Users:
         return await cls.update_user_by_tg_id(tg_id, update_data)
 
-    classmethod
+    @classmethod
     async def add_user_if_not_exists(cls, tg_id: int, username: str, is_premium: bool):
         try:
             user = await Users.get(tg_id=tg_id)
