@@ -61,17 +61,24 @@ async def get_jwt_token(username: str, is_premium: bool, tg_id: int) -> str:
 
 
         async with session.post(auth_url, json=payload, ssl=False) as response:
-            response_data = await response.json()
             if response.status != 200:
-                bot_logger.error(f"Failed to obtain JWT token: {await response.text()}")
-                raise Exception("Failed to obtain JWT token")
-            return response_data.get('access_token')
+                response_text = await response.text()
+                bot_logger.error(f"Failed to obtain JWT token: {response.status}, {response_text}")
+                raise Exception(f"Failed to obtain JWT token: {response_text}")
+
+            return response.json.get('access_token')
+
+
+
+
+
 
 
 async def create_user_request(
     session: aiohttp.ClientSession, payload: dict, headers: dict
 ) -> Optional[dict]:
     create_user_link = BACKEND_URLS.get('create_user')
+    bot_logger.info(f"Create user URL: {create_user_link}")
     async with session.post(create_user_link, json=payload, headers=headers, ssl=False) as response:
         if response.status == 401:
             return None
