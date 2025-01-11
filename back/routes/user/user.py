@@ -11,7 +11,8 @@ from back.views.auth.user import AuthUserOut
 from back.views.user.user import StartUserIn, StartUserOut, UserMainPageIn, UserMainPageOut, UserOut
 from back.controllers.user import UserController
 
-router = APIRouter(dependencies=[Depends(JWTBearer())])
+router = APIRouter() # dependencies=[Depends(JWTBearer())]
+
 
 @router.post(
     "/create_user",
@@ -22,19 +23,47 @@ async def create_user(
     user_data: StartUserIn = Body(...),
     user_in: AuthUserOut = Depends(get_user),
 ) -> StartUserOut:
-    
     logging.info(f"Incoming create_user request: {user_data.dict()}")
-    logging.info(f"----------------")
-    logging.info(f"Incoming create_user request: {user_data}")
+    logging.info(f"User tg_id: {user_in.tg_id}")
 
     if user_in.tg_id != user_data.tg_id:
+        logging.error(f"User mismatch: expected {user_in.tg_id}, got {user_data.tg_id}")
         raise APIException("User not match", 401)
 
     try:
         user = await UserController.add_user_if_not_exists(user_data.tg_id, user_data.username, user_data.is_premium)
         return StartUserOut.model_validate(user)
     except Exception as error:
-        logging.error(f"Error creating user {user_data.tg_id}, {user_data.username}")
-        raise APIException(f"Create user {error=}", 400)
+        logging.error(f"Error creating user {user_data.tg_id}, {user_data.username}: {error}")
+        raise APIException(f"Create user failed: {error}", 400)
 
 
+@router.get(
+    "/main_data",
+    response_model=UserMainPageOut,
+    responses={400: {"model": APIExceptionModel}},
+)
+async def get_user_main_data(
+    user_in: AuthUserOut = Depends(get_user),
+) -> UserMainPageOut:
+    
+    logging.info(f"Incoming get_user_main_data request for tg_id: {user_in.tg_id}")
+
+    user = await UserController.get_main_page_user_data(user_in.tg_id)
+    if not user:
+        raise APIException(f"User with tg_id {user_in.tg_id} not found", 404)
+
+    response = UserMainPageOut(
+        uuid=user.uuid,
+        tg_id=user.tg_id,
+        username=user.username,
+        rating=user.rating or 0.0,
+        balance=0.0,
+        total_sales=0.0,
+        referral_id=None,
+        is_vip=user.is_vip,
+        created_at=user.created_at.isoformat(),
+        updated_at=user.update_at.isoformat() if user.update_at else user.created_at.isoformat(),
+    )
+
+    return response
