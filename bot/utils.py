@@ -56,6 +56,10 @@ async def get_jwt_token(username: str, is_premium: bool, tg_id: int) -> str:
             "init_ton": {"address": "string", "signature": "full"},
             "auth_type": "telegram",
         }
+
+        bot_logger.info(f'payload: {payload}')
+
+
         async with session.post(auth_url, json=payload, ssl=False) as response:
             response_data = await response.json()
             if response.status != 200:
@@ -95,6 +99,10 @@ async def start_user_get_or_create(
 
         if response_data is None or 'tg_id' not in response_data:
             reply_text = MESSAGES.get('error')
+
+            bot_logger.info(f'response_data: {response_data}')
+
+
             bot_logger.error("Failed to create user after token refresh attempt.")
             return reply_text, None
 
