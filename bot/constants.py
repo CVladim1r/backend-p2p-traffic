@@ -6,8 +6,8 @@ MESSAGES = {
 
 
 BACKEND_URLS = {
-    'create_user': f'{BACKEND_API_URL}/api/v1/p2p/users/create_user',
-    'auth': f'{BACKEND_API_URL}/api/v1/p2p/auth',
+    'create_user': f'https://api.just-ad.ru/api/v1/p2p/users/create_user',
+    'auth': f'https://api.just-ad.ru/api/v1/p2p/auth',
 
     # 'referrals': f'{BACKEND_API_URL}/api/v1/p2p/referral/referrals/',
 }

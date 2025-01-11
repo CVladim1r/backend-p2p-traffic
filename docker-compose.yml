@@ -6,8 +6,8 @@ services:
     command: /bin/bash -c "aerich init-db || echo 'Database already initialized'; aerich upgrade"
     env_file:
       - .env
-    networks:
-      - backend_network
+    # networks:
+    #   - backend_network
 
   backend:
     build:
@@ -21,8 +21,8 @@ services:
     command: /bin/bash -c "while ! nc -z $POSTGRES_HOST $POSTGRES_PORT; do sleep 1; done; python -m uvicorn back.app:app --host 0.0.0.0 --port 9100 --workers 2 --limit-max-requests 10000"
     env_file:
       - .env
-    networks:
-      - backend_network
+    # networks:
+    #   - backend_network
 
   bot:
     build:
@@ -34,9 +34,9 @@ services:
         condition: service_started
     env_file:
       - .env
-    networks:
-      - backend_network
+#     networks:
+#       - backend_network
 
-networks:
-  backend_network:
-    driver: bridge
+# networks:
+#   backend_network:
+#     driver: bridge
