@@ -91,7 +91,7 @@ async def create_user_request(
 
 
 async def start_user_get_or_create(
-    tg_id: int, username: str, is_premium: bool, referral_uuid: str | None
+    tg_id: int, username: str, is_premium: bool | None
 ) -> Tuple[str, InlineKeyboardMarkup | None]:
     token = await get_jwt_token(username=username, is_premium=is_premium, tg_id=tg_id)
     headers = {'Authorization': f'Bearer {token}'}
@@ -99,8 +99,7 @@ async def start_user_get_or_create(
     connector = aiohttp.TCPConnector(limit_per_host=5)
     async with aiohttp.ClientSession(trust_env=True, connector=connector) as session:
         payload = {"tg_id": tg_id, "username": username, "is_premium": is_premium}
-        if referral_uuid:
-            payload["referral_uuid"] = referral_uuid
+       
 
         response_data = await create_user_request(session, payload, headers)
         if response_data is None:
@@ -118,6 +117,6 @@ async def start_user_get_or_create(
             bot_logger.error("Failed to create user after token refresh attempt.")
             return reply_text, None
 
-        await log_new_user(username=username, referral_uuid=referral_uuid)
+        await log_new_user(username=username)
         reply_text = await success_start_msg(username)
         return reply_text, keyboard
