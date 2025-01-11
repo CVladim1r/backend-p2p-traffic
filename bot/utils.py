@@ -60,15 +60,20 @@ async def get_jwt_token(username: str, is_premium: bool, tg_id: int) -> str:
         bot_logger.info(f'payload: {payload}')
 
 
+        # async with session.post(auth_url, json=payload, ssl=False) as response:
+        #     response_data = await response.json()
+        #     if response.status != 200:
+        #         bot_logger.error(f"Failed to obtain JWT token: {await response.text()}")
+        #         raise Exception("Failed to obtain JWT token")
+        #     return response_data.get('access_token')
+
         async with session.post(auth_url, json=payload, ssl=False) as response:
             if response.status != 200:
                 response_text = await response.text()
                 bot_logger.error(f"Failed to obtain JWT token: {response.status}, {response_text}")
                 raise Exception(f"Failed to obtain JWT token: {response_text}")
-
-            return response.json.get('access_token')
-
-
+            response_data = await response.json()
+            return response_data.get('access_token')
 
 
 

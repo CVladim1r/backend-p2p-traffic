@@ -22,6 +22,13 @@ async def create_user(
     user_data: StartUserIn = Body(...),
     user_in: AuthUserOut = Depends(get_user),
 ) -> StartUserOut:
+    
+    logging.info(f"Incoming create_user request: {user_data.dict()}")
+
+    logging.info(f"----------------")
+
+    logging.info(f"Incoming create_user request: {user_data}")
+
     if user_in.tg_id != user_data.tg_id:
         raise APIException("User not match", 401)
 
