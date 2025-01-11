@@ -3,7 +3,7 @@ from uuid import UUID
 
 from tortoise.exceptions import DoesNotExist
 
-from satoshi.errors import APIException
+from back.errors import APIException
 
 T = TypeVar("T")
 

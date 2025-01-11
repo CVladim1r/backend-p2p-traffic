@@ -1,15 +1,14 @@
 import logging
 import uuid
-import pytz
 
-from fastapi import APIRouter, HTTPException
-from datetime import datetime
+from fastapi import APIRouter
 
 from back.auth.token import create_token
 from back.views.auth.auth import AuthIn, AuthOut
-from back.models.user import User
-router = APIRouter()
+from back.models.users import Users
 
+
+router = APIRouter()
 
 @router.post("", response_model=AuthOut)
 async def post_auth(init_data: AuthIn):
