@@ -25,14 +25,14 @@ async def command_start_handler(message: Message) -> None:
     tg_id = int(message.from_user.id)
     username = str(message.from_user.username)
     is_premium = message.from_user.is_premium or False
-    referred_user_tg_id = (
-        message.text.split(maxsplit=1)[1] if len(message.text.split(maxsplit=1)) > 1 else None
-    )
+    # referred_user_tg_id = (
+    #     message.text.split(maxsplit=1)[1] if len(message.text.split(maxsplit=1)) > 1 else None
+    # )
     reply_text, keyboard = await start_user_get_or_create(
         tg_id=tg_id,
         username=username,
         is_premium=is_premium,
-        referral_uuid=referred_user_tg_id,
+        # referral_uuid=referred_user_tg_id,
     )
     await message.answer(text=reply_text, reply_markup=keyboard)
 
