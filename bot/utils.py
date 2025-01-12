@@ -29,8 +29,8 @@ async def success_start_msg(username: str) -> str:
     return msg
 
 
-async def log_new_user(username, ref_check):
-    bot_logger.info(f'New user {username=} joined.')
+# async def log_new_user(username, ref_check):
+#     bot_logger.info(f'New user {username=} joined.')
 
 
 async def get_jwt_token(username: str, is_premium: bool, tg_id: int) -> str:
@@ -117,6 +117,6 @@ async def start_user_get_or_create(
             bot_logger.error("Failed to create user after token refresh attempt.")
             return reply_text, None
 
-        await log_new_user(username=username)
+        # await log_new_user(username=username)
         reply_text = await success_start_msg(username)
         return reply_text, keyboard
