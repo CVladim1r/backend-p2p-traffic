@@ -15,6 +15,7 @@ class UserMainPageOut(BaseModel):
     tg_id: int
     username: str | None
 
+    deals: int
     rating: float
     balance: Dict[str, str] 
     total_sales: float

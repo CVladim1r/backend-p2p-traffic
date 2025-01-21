@@ -63,12 +63,14 @@ async def get_user_main_data(
         rating=user.rating or 0.0,
         balance=balance_data,
         total_sales=user.total_sales,
+        deals=0,
         referral_id=None,
         is_vip=user.is_vip,
         profile_photo=user.profile_photo,
         created_at=user.created_at.isoformat(),
         updated_at=user.update_at.isoformat() if user.update_at else user.created_at.isoformat(),
-    )
+        )
+    
     return response
 
 
