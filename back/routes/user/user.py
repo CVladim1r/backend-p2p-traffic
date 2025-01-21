@@ -62,7 +62,7 @@ async def get_user_main_data(
         username=user.username,
         rating=user.rating or 0.0,
         balance=balance_data,
-        total_sales=0.0,
+        total_sales=user.total_sales,
         referral_id=None,
         is_vip=user.is_vip,
         profile_photo=user.profile_photo,

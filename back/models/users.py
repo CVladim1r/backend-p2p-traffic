@@ -13,6 +13,8 @@ class Users(models.Model):
     rating = fields.DecimalField(max_digits=10, decimal_places=2, null=True)
     is_vip = fields.BooleanField(default=False)
 
+    total_sales = fields.DecimalField(max_digits=18, decimal_places=2, default=0.0)
+
     last_login = fields.DatetimeField(null=True)
     created_at = fields.DatetimeField(auto_now_add=True)
     update_at = fields.DatetimeField(auto_now_add=True, null=True)
