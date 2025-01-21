@@ -88,9 +88,4 @@ async def update_user_photo(
     user.profile_photo = photo_url
     await user.save()
 
-    return StartUserOut(
-        uuid=user.uuid,
-        tg_id=user.tg_id,
-        username=user.username,
-        profile_photo=user.profile_photo,
-    )
+    return "Successfully"
