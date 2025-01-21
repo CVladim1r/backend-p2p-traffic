@@ -93,7 +93,7 @@ async def create_user_request(
 async def start_user_get_or_create(
     tg_id: int, username: str, is_premium: bool | None
 ) -> Tuple[str, InlineKeyboardMarkup | None]:
-    token = await get_jwt_token(username=username, is_premium=is_premium, tg_id=tg_id)
+    token = await get_jwt_token(username=username, is_premium=is_premium, tg_id=tg_id, )
     headers = {'Authorization': f'Bearer {token}'}
 
     connector = aiohttp.TCPConnector(limit_per_host=5)

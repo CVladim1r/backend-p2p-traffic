@@ -4,7 +4,7 @@ import uuid
 from fastapi import APIRouter, Depends, Body
 
 from back.auth.auth import get_user
-from back.models.users import Users
+from back.models.users import Users, UserBalance
 from back.errors import APIException, APIExceptionModel
 from back.auth.auth import JWTBearer
 from back.views.auth.user import AuthUserOut
@@ -53,17 +53,44 @@ async def get_user_main_data(
     if not user:
         raise APIException(f"User with tg_id {user_in.tg_id} not found", 404)
 
+    balances = await UserBalance.filter(user=user).all()
+    balance_data = {balance.currency: str(balance.balance) for balance in balances}
+
     response = UserMainPageOut(
         uuid=user.uuid,
         tg_id=user.tg_id,
         username=user.username,
         rating=user.rating or 0.0,
-        balance=0.0,
+        balance=balance_data,
         total_sales=0.0,
         referral_id=None,
         is_vip=user.is_vip,
+        profile_photo=user.profile_photo,
         created_at=user.created_at.isoformat(),
         updated_at=user.update_at.isoformat() if user.update_at else user.created_at.isoformat(),
     )
-
     return response
+
+
+@router.post(
+    "/update_user_photo",
+    response_model=StartUserOut,
+    responses={400: {"model": APIExceptionModel}},
+)
+async def update_user_photo(
+    user_in: AuthUserOut = Depends(get_user),
+    photo_url: str = Body(..., embed=True),
+):
+    user = await UserController.get_main_page_user_data(user_in.tg_id)
+    if not user:
+        raise APIException(f"User with tg_id {user_in.tg_id} not found", 404)
+
+    user.profile_photo = photo_url
+    await user.save()
+
+    return StartUserOut(
+        uuid=user.uuid,
+        tg_id=user.tg_id,
+        username=user.username,
+        profile_photo=user.profile_photo,
+    )
