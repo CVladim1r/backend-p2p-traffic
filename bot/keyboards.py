@@ -8,6 +8,6 @@ buttons = [
         InlineKeyboardButton(text='Telegram Channel', url='https://t.me/'),
         InlineKeyboardButton(text='Join X', url='https://x.com/'),
     ],
-    [InlineKeyboardButton(text='Play', web_app=web_app_info)],
+    [InlineKeyboardButton(text='Launch', web_app=web_app_info)],
 ]
 start_keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)

@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Dict, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -15,8 +15,9 @@ class UserMainPageOut(BaseModel):
     tg_id: int
     username: str | None
 
+    deals: int
     rating: float
-    balance: float
+    balance: Dict[str, str] 
     total_sales: float
     referral_id: UUID | None
     is_vip: bool
