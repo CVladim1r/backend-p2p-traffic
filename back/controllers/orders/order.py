@@ -6,7 +6,7 @@ from tortoise.transactions import in_transaction
 from back.controllers.base import BaseUserController, T
 from back.controllers.user import UserController
 from back.errors import APIExceptionModel, APIException
-from back.models import Ads, Deals
+from back.models import Ads, Deals, Transactions
 from back.models.enums import AdStatus, DealStatus
 
 import logging
@@ -15,12 +15,11 @@ import logging
 class OrderController(BaseUserController):
 
     @staticmethod
-    async def create_ad(ad_data: Dict[str, Any], tg_id: int) -> Ads:
-        user = await UserController.get_by_tg_id(tg_id)
-        if not user:
+    async def create_ad(ad_data: Dict[str, Any], user_in) -> Ads:
+        if not user_in:
             raise APIException(detail="User not found", status_code=404)
         ad = await Ads.create(
-            user_id=user.id,
+            user_id=user_in,
             category=ad_data["category"],
             title=ad_data["title"],
             description=ad_data["description"],
