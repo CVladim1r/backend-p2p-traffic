@@ -73,10 +73,9 @@ async def get_user_main_data(
     
     return response
 
-
+# TODO DELETE THIS SHIIIIIIIIIT
 @router.post(
     "/update_user_photo",
-    response_model=StartUserOut,
     responses={400: {"model": APIExceptionModel}},
 )
 async def update_user_photo(
@@ -90,4 +89,4 @@ async def update_user_photo(
     user.profile_photo = photo_url
     await user.save()
 
-    return "Successfully"
+    return photo_url

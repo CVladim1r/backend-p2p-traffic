@@ -8,7 +8,7 @@ class Users(models.Model):
     tg_id = fields.BigIntField(index=True, unique=True)
     is_premium = fields.BooleanField(null=True)
     username = fields.CharField(max_length=128, null=True)
-    profile_photo = fields.CharField(max_length=8192, null=True)
+    profile_photo = fields.CharField(max_length=65536, null=True)
 
     rating = fields.DecimalField(max_digits=10, decimal_places=2, null=True)
     is_vip = fields.BooleanField(default=False)
