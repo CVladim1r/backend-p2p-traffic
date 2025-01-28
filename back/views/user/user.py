@@ -17,12 +17,13 @@ class UserMainPageOut(BaseModel):
 
     deals: int
     rating: float
-    balance: Dict[str, str] 
+    balance: Dict[str, str] | None
     total_sales: float
     referral_id: UUID | None
     is_vip: bool
+    profile_photo: str | None
     created_at: str
-    updated_at: str
+    updated_at: str 
 
 
 class CreateUserRequest(BaseModel):
@@ -68,7 +69,11 @@ class UserOut(BaseModel):
     uuid: UUID
     tg_id: int
     username: Optional[str] = None
-
     is_premium: Optional[bool] = None
     created_at: datetime
 
+class UserOut(BaseModel):
+    uuid: UUID
+    tg_id: int
+    username: str
+    profile_photo: str
