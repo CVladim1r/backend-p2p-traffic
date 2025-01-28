@@ -31,5 +31,5 @@ async def get_transaction_currency_types() -> list[str]:
 async def get_categories() -> list[str]:
     categories = []
     for category in Categories:
-        categories.append(f"{category.label_ru})")
+        categories.append(f"{category.label_ru}")
     return categories

@@ -67,7 +67,11 @@ class UserOut(BaseModel):
     uuid: UUID
     tg_id: int
     username: Optional[str] = None
-
     is_premium: Optional[bool] = None
     created_at: datetime
 
+class UserOut(BaseModel):
+    uuid: UUID
+    tg_id: int
+    username: str
+    profile_photo: str
