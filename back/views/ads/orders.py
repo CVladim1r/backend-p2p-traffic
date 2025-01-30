@@ -14,7 +14,7 @@ class AdCreate(BaseModel):
     link_to_channel: str
     maximum_traffic: int
 
-    price: Optional[float] = Field(default=None, gt=0, description="Price must be greater than 0")
+    price: float # ] = Field(gt=0, description="Price must be greater than 0")
     guaranteed_traffic: bool
     minimum_traffic: int
     conditions: str
