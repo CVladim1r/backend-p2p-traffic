@@ -7,8 +7,8 @@ class AdStatus(str, Enum):
     REJECTED = "Rejected"
 
 class TransactionType(str, Enum):
-    DEPOSIT = "deposit"     # Пополнение
-    WITHDRAWAL = "withdrawal" # Вывод
+    DEPOSIT = "deposit"
+    WITHDRAWAL = "withdrawal"
     FEE = "fee"             # Комиссия
     REFERRAL = "referral"   # Реферальные
 
@@ -17,21 +17,6 @@ class TransactionCurrencyType(str, Enum):
     BTC = "BTC"
     USDT = "USDT"
     JET = "JET" 
-    
-    @property
-    def label_en(self):
-        return self.value
-
-    @property
-    def label_ru(self):
-        labels = {
-            "USDT": "Тезер",
-            "TON": "Тонкойн",
-            "NOT": "Ноткоин",
-            "BITCOIN": "Биткойн",
-            "SOLANA": "Солана"
-        }
-        return labels.get(self.name, self.name) 
 
 class TransactionStatus(str, Enum):
     PENDING = "Pending"
@@ -61,30 +46,3 @@ class Categories(str, Enum):
     TAPALKS = "Tapalki"
     TRASH = "Trash"
     OTHER = "Other"    
-
-    @property
-    def label_en(self):
-        return self.value
-
-    @property
-    def label_ru(self):
-        labels = {
-            "GAMES": "Игры",
-            "CRYPTOCURRENCY": "Криптовалюта",
-            "OTHER": "Другое",
-            "EDUCATIONAL": "Познавательная",
-            "STREAMERS": "Строчники",
-            "TRADING": "Трейдинг",
-            "INVESTMENTS": "Инвестиции",
-            "HUMOR": "Юмор",
-            "FREEBIES": "Халява",
-            "JOB_SEARCH": "Поиск работы",
-            "BLOG": "Блог",
-            "ADAPTERS": "Переходники",
-            "GAMBLING": "Гемблинг",
-            "ART": "Искусство",
-            "TAPALKS": "Тапалки",
-            "TRASH": "Треш"
-        }
-        return labels.get(self.name, self.name)
-
