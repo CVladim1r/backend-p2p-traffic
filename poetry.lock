@@ -323,18 +323,6 @@ gssauth = ["gssapi", "sspilib"]
 test = ["distro (>=1.9.0,<1.10.0)", "flake8 (>=6.1,<7.0)", "flake8-pyi (>=24.1.0,<24.2.0)", "gssapi", "k5test", "mypy (>=1.8.0,<1.9.0)", "sspilib", "uvloop (>=0.15.3)"]
 
 [[package]]
-name = "atlastk"
-version = "0.13.3"
-description = "World's lightest toolkit to quickly and easily add a GUI to your Python programs and bring them online."
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "atlastk-0.13.3-py3-none-any.whl", hash = "sha256:7d1ac1c9bffb63e09a2e55eb8ab2795e0bf79252805c84493bf0e30bab6879a1"},
-    {file = "atlastk-0.13.3.tar.gz", hash = "sha256:17808075d5fbada776e8c2f7479fecb6373af9df33f23d7485556106cef871fc"},
-]
-
-[[package]]
 name = "attrs"
 version = "25.1.0"
 description = "Classes Without Boilerplate"
@@ -1985,21 +1973,6 @@ files = [
 ]
 
 [[package]]
-name = "tortoise"
-version = "0.1.1"
-description = "Turtle graphics on the web."
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "tortoise-0.1.1-py3-none-any.whl", hash = "sha256:bcb58a56d6796cad0db330104450df2caf2ea9e98d844bb2906274bd15c12804"},
-    {file = "tortoise-0.1.1.tar.gz", hash = "sha256:a4ebd69b152d266174b3b0f2a22e3fb8995101eb749d3114813a98f405ab10bb"},
-]
-
-[package.dependencies]
-atlastk = "*"
-
-[[package]]
 name = "tortoise-orm"
 version = "0.21.3"
 description = "Easy async ORM for python, built with relations in mind"
@@ -2505,4 +2478,4 @@ propcache = ">=0.2.0"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "f160b4edad658a1dbb1e414c00edaf135744d7fdf16646664b85b548ca287915"
+content-hash = "3e8b638dd4dfd48108ce65c2ab1bb9622e79f02fd401b9cc1dd5ca02cc678434"

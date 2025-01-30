@@ -20,7 +20,6 @@ aiohttp = "^3.9.5"
 aerich = "^0.7.2"
 requests = "^2.32.3"
 aiocryptopay = "^0.4.7"
-tortoise = "^0.1.1"
 
 [tool.aerich]
 tortoise_orm = "back.config.TORTOISE_ORM"
