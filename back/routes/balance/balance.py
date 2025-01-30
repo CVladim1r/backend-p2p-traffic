@@ -2,9 +2,13 @@ import logging
 
 from fastapi import APIRouter, Body, Depends
 from decimal import Decimal
-from back.auth.auth import JWTBearer
 
+
+from back.auth.auth import JWTBearer, get_user
 from back.controllers.balance import BalanceController
+from back.views.auth.user import AuthUserOut
+from back.models import Users
+from back.errors import APIException
 
 router = APIRouter(dependencies=[Depends(JWTBearer())])
 
@@ -19,9 +23,12 @@ async def create_deposit(
 @router.post("/withdraw")
 async def withdraw_funds(
     amount: float,
-    user_id: int = Depends(JWTBearer())
+    user_in: AuthUserOut = Depends(get_user),
 ):
-    check_url = await BalanceController.process_withdrawal(user_id, Decimal(amount))
+    user = await Users.get(tg_id=user_in.tg_id)
+    if not user:
+        raise APIException(detail="User not found", status_code=404)
+    check_url = await BalanceController.process_withdrawal(user.uuid, Decimal(amount))
     return {"check_url": check_url}
 
 

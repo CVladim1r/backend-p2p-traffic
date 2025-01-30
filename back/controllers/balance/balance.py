@@ -1,6 +1,5 @@
 from decimal import Decimal
-
-from fastapi.exceptions import HTTPException
+from fastapi import HTTPException
 
 from back.models.transactions import Transactions
 from back.models.users import UserBalance
@@ -17,38 +16,44 @@ class BalanceController:
         transaction_type: TransactionType,
         cryptobot_data: dict = None
     ) -> Transactions:
-        transaction = await Transactions.create(
+        return await Transactions.create(
             user_id=user_id,
             amount=amount,
             type=currency,
             status=TransactionStatus.PENDING,
             transaction_type=transaction_type,
-            **({} if not cryptobot_data else cryptobot_data)
+            **(cryptobot_data or {})
         )
-        return transaction
 
     @staticmethod
     async def create_deposit(user_id: int, amount: Decimal):
-        currency = "JET" if IS_TESTNET else "TON"
+        currency = TransactionCurrencyType.JET if IS_TESTNET else TransactionCurrencyType.TON
         
         invoice = await crypto_service.create_invoice(
             user_id=user_id,
             amount=float(amount),
-            asset=currency,
+            asset=currency.value,
         )
         
         return invoice.bot_invoice_url
 
     @staticmethod
     async def process_withdrawal(user_id: int, amount: Decimal):
-        commission = amount * Decimal('0.02')
+        if amount <= 0:
+            raise HTTPException(status_code=400, detail="Invalid withdrawal amount")
+        
+        commission = amount * Decimal("0.02")
         withdraw_amount = amount - commission
-        currency = "JET" if IS_TESTNET else "TON"
+        currency = TransactionCurrencyType.JET if IS_TESTNET else TransactionCurrencyType.TON
+
+        balance = await UserBalance.get_or_none(user_id=user_id, currency=currency)
+        if not balance or balance.balance < amount:
+            raise HTTPException(status_code=400, detail="Insufficient funds")
 
         check = await crypto_service.create_withdrawal(
             user_id=user_id,
             amount=withdraw_amount,
-            asset=currency
+            asset=currency.value
         )
         
         await BalanceController.update_balance(user_id, currency, -amount)
@@ -58,9 +63,7 @@ class BalanceController:
             amount=withdraw_amount,
             currency=currency,
             transaction_type=TransactionType.WITHDRAWAL,
-            cryptobot_data={
-                "cryptobot_check_id": check.check_id
-            }
+            cryptobot_data={"cryptobot_check_id": check.check_id}
         )
         
         await BalanceController._create_transaction(
@@ -78,14 +81,14 @@ class BalanceController:
         currency: TransactionCurrencyType,
         amount: Decimal
     ):
-        balance, created = await UserBalance.get_or_create(
+        balance, _ = await UserBalance.get_or_create(
             user_id=user_id,
             currency=currency,
-            defaults={"balance": Decimal(0.0)}
+            defaults={"balance": Decimal("0.0")}
         )
         
-        if not created and balance.balance + amount < 0:
-            raise HTTPException("Insufficient funds", 400)
+        if balance.balance + amount < 0:
+            raise HTTPException(status_code=400, detail="Insufficient funds")
         
         balance.balance += amount
         await balance.save()
