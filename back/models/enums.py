@@ -1,10 +1,10 @@
 from enum import Enum
 
 class AdStatus(str, Enum):
-    PENDING_MODERATION = "Pending Moderation"
-    ACTIVE = "Active"
-    COMPLETED = "Completed"
-    REJECTED = "Rejected"
+    PENDING_MODERATION = "PENDING_MODERATION"
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
+    REJECTED = "REJECTED"
 
 class TransactionType(str, Enum):
     DEPOSIT = "deposit"

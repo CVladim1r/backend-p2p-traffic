@@ -1,20 +1,31 @@
-from pydantic import BaseModel, UUID4
+from pydantic import BaseModel, UUID4, Field
 from typing import Optional
 from decimal import Decimal
 from datetime import datetime
-from back.models.enums import Categories, AdStatus, DealStatus
+from back.models.enums import Categories, AdStatus, DealStatus, TransactionCurrencyType
 
 
 class AdCreate(BaseModel):
     category: Categories
     title: str
     description: str
-    price: Decimal
+    
+    currency_type: TransactionCurrencyType
+    link_to_channel: str
+    maximum_traffic: int
+
+    price: Optional[float] = Field(default=None, gt=0, description="Price must be greater than 0")
     guaranteed_traffic: bool
-    minimum_traffic: Optional[int]
+    minimum_traffic: int
     conditions: str
-    execution_time: str
     is_paid_promotion: bool
+
+class AdCreateOut(BaseModel):
+    uuid: UUID4
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
 
 
 class AdOut(BaseModel):
@@ -22,15 +33,25 @@ class AdOut(BaseModel):
     category: Categories
     title: str
     description: str
-    price: Decimal
+    price: Optional[float]
     guaranteed_traffic: bool
-    minimum_traffic: Optional[int]
+    minimum_traffic: int | None
+    maximum_traffic: int | None
+    currency_type: Optional[TransactionCurrencyType]
+    link_to_channel: Optional[str]
     conditions: str
-    execution_time: str
     is_paid_promotion: bool
     status: AdStatus
-    created_at: datetime
-    updated_at: datetime
+
+    user: UUID4
+    user_name: str
+    user_photo_url: str
+    user_deals: int
+    user_rating: float
+    user_vip: bool
+
+    # created_at: datetime
+    # updated_at: datetime
 
     class Config:
         orm_mode = True

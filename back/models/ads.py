@@ -1,7 +1,7 @@
 from uuid import uuid4
 from tortoise import fields, models
 
-from .enums import AdStatus, Categories, DealStatus
+from .enums import AdStatus, Categories, DealStatus, TransactionCurrencyType
 
 
 ''' Объявления, сделки only''' # remove in code review
@@ -9,18 +9,23 @@ class Ads(models.Model):
     uuid = fields.UUIDField(pk=True, default=uuid4, unique=True)
     user_id = fields.ForeignKeyField("models.Users", related_name="ads")
     category = fields.CharEnumField(enum_type=Categories)     
+    
     title = fields.CharField(max_length=256)
     description = fields.TextField()
     price = fields.DecimalField(max_digits=15, decimal_places=2)
+    currency_type = fields.CharEnumField(enum_type=TransactionCurrencyType)
+
+    link_to_channel = fields.CharField(max_length=256)
 
     guaranteed_traffic = fields.BooleanField(default=False)
     minimum_traffic = fields.IntField(null=True)
+    maximum_traffic = fields.IntField(null=True)
+
     conditions = fields.TextField()
-
-    execution_time = fields.CharField(max_length=256)
-    is_paid_promotion = fields.BooleanField(default=False)
-
     status = fields.CharEnumField(enum_type=AdStatus)
+
+    # execution_time = fields.DatetimeField(auto_now=True, null=True)
+    is_paid_promotion = fields.BooleanField(default=False)
     
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
