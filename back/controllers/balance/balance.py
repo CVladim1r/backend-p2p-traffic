@@ -40,14 +40,15 @@ class BalanceController:
         return invoice.bot_invoice_url
 
     @staticmethod
-    async def process_withdrawal(user_id: int, amount: Decimal, currency: TransactionCurrencyType):
+    async def process_withdrawal(user_id: int, amount: Decimal):
         commission = amount * Decimal('0.02')
         withdraw_amount = amount - commission
-        
+        currency = "JET" if IS_TESTNET else "TON"
+
         check = await crypto_service.create_withdrawal(
             user_id=user_id,
-            amount=float(withdraw_amount),
-            asset=currency.value
+            amount=withdraw_amount,
+            asset=currency
         )
         
         await BalanceController.update_balance(user_id, currency, -amount)
@@ -77,10 +78,6 @@ class BalanceController:
         currency: TransactionCurrencyType,
         amount: Decimal
     ):
-        """
-        Обновляет баланс пользователя.
-        Если баланса нет, создает новую запись.
-        """
         balance, created = await UserBalance.get_or_create(
             user_id=user_id,
             currency=currency,

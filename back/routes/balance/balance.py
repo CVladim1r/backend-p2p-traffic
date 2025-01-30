@@ -10,7 +10,6 @@ router = APIRouter(dependencies=[Depends(JWTBearer())])
 
 @router.post("/deposit")
 async def create_deposit(
-    # currency: str,
     amount: float,
     user_id: int = Depends(JWTBearer())
 ):
@@ -19,11 +18,10 @@ async def create_deposit(
 
 @router.post("/withdraw")
 async def withdraw_funds(
-    currency: str,
     amount: float,
     user_id: int = Depends(JWTBearer())
 ):
-    check_url = await BalanceController.process_withdrawal(user_id, Decimal(amount), currency)
+    check_url = await BalanceController.process_withdrawal(user_id, Decimal(amount))
     return {"check_url": check_url}
 
 

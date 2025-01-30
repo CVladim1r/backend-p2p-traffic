@@ -52,7 +52,7 @@ register_tortoise(app, add_exception_handlers=True, config=TORTOISE_ORM)
 
 
 
-@app.post("/webhook/cryptobot")
+@app.post("/webhook/cryptobot", summary="Webhook Endpoint", description="Check API health")
 async def cryptobot_webhook(request: Request):
     body = await request.body()
     if not crypto_service.crypto.check_signature(
@@ -80,10 +80,14 @@ async def cryptobot_webhook(request: Request):
             status=TransactionStatus.SUCCESSFUL,
             update_at=datetime.utcnow()
         )
+    elif update.update_type == "invoice_expired":
+        invoice = update.payload
+        await Transactions.filter(cryptobot_invoice_id=invoice.invoice_id).update(
+            status=TransactionStatus.FAILED,
+            update_at=datetime.utcnow()
+        )
     
     return {"status": "ok"}
-
-
 
 
 @app.get("/", summary="Root Endpoint", description="Check API health", dependencies=[Depends(JWTBearer())])
