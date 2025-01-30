@@ -55,8 +55,10 @@ register_tortoise(app, add_exception_handlers=True, config=TORTOISE_ORM)
 @app.post("/webhook/cryptobot", summary="Webhook Endpoint", description="Check API health")
 async def cryptobot_webhook(request: Request):
     body = await request.body()
+    body_text = body.decode("UTF-8")  # Декодируем bytes в строку
+    
     if not crypto_service.crypto.check_signature(
-        body,
+        body_text,
         request.headers.get("crypto-pay-api-signature")
     ):
         raise HTTPException(403, "Invalid signature")
