@@ -6,7 +6,7 @@ from tortoise.transactions import in_transaction
 from back.controllers.base import BaseUserController, T
 from back.controllers.user import UserController
 from back.errors import APIExceptionModel, APIException
-from back.models import Ads, Deals, Transactions
+from back.models import Ads, Deals, Transactions, Users
 from back.models.enums import AdStatus, DealStatus
 
 import logging
@@ -16,19 +16,21 @@ class OrderController(BaseUserController):
 
     @staticmethod
     async def create_ad(ad_data: Dict[str, Any], user_in) -> Ads:
-        if not user_in:
+        user = await Users.get(tg_id=user_in.tg_id)
+        if not user:
             raise APIException(detail="User not found", status_code=404)
+
         ad = await Ads.create(
-            user_id=user_in,
-            category=ad_data["category"],
-            title=ad_data["title"],
-            description=ad_data["description"],
-            price=ad_data["price"],
-            guaranteed_traffic=ad_data.get("guaranteed_traffic", False),
-            minimum_traffic=ad_data.get("minimum_traffic"),
-            conditions=ad_data["conditions"],
-            execution_time=ad_data["execution_time"],
-            is_paid_promotion=ad_data.get("is_paid_promotion", False),
+            user_id=user,
+            category=ad_data.category,
+            title=ad_data.title,
+            description=ad_data.description,
+            price=ad_data.price,
+            guaranteed_traffic=ad_data.guaranteed_traffic,
+            minimum_traffic=ad_data.minimum_traffic,
+            conditions=ad_data.conditions,
+            execution_time=ad_data.execution_time,
+            is_paid_promotion=ad_data.is_paid_promotion,
             status=AdStatus.ACTIVE,
         )
         return ad

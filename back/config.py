@@ -4,13 +4,18 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-debug = os.getenv("DEBUG", False)
 
-DB_USER = os.getenv("POSTGRES_USER", "postgres")
-DB_PASS = os.getenv("POSTGRES_PASSWORD", "q1q1q1q1")
+CRYPTBOT_WEBHOOK_URL = os.getenv("CRYPTBOT_WEBHOOK_URL")
+CRYPTOBOT_TOKEN = os.getenv("CRYPTOBOT_TOKEN")
+IS_TESTNET = os.getenv("IS_TESTNET")
+
+debug = os.getenv("DEBUG")
+
+DB_USER = os.getenv("POSTGRES_USER")
+DB_PASS = os.getenv("POSTGRES_PASSWORD")
 DB_PORT = os.getenv("POSTGRES_PORT", 5432)
-DB_HOST = os.getenv("POSTGRES_HOST", "127.0.0.1")
-DB_NAME = os.getenv("POSTGRES_DB", "p2p")
+DB_HOST = os.getenv("POSTGRES_HOST")
+DB_NAME = os.getenv("POSTGRES_DB")
 DB_URL = f"postgres://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
 
