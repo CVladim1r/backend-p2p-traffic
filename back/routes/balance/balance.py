@@ -8,7 +8,6 @@ from back.auth.auth import JWTBearer
 from back.controllers.balance import BalanceController
 from back.views.balance.balance import BalanceDepositIn, BalanceWithdrawIn, UserBalanceOut
 from back.views.auth.user import AuthUserOut
-from back.utils.cryptobot import create_invoice, request_payout, verify_webhook
 from back.auth.auth import get_user
 
 router = APIRouter(dependencies=[Depends(JWTBearer())])
@@ -21,16 +20,13 @@ async def deposit_balance(
     user_in: AuthUserOut = Depends(get_user),
 ):
     try:
-        invoice = await create_invoice(user_in.tg_id, deposit_data.currency, deposit_data.amount)
-        return {"invoice_url": invoice["pay_url"]}
+        return {"invoice_url"}
     except Exception as error:
         logging.error(f"Deposit error: {error}")
         raise HTTPException(f"Deposit failed: {error}", 400)
 
 @router.post("/balance/webhook")
 async def cryptobot_webhook(payload: dict = Body(...)):
-    if not verify_webhook(payload):
-        raise HTTPException("Invalid webhook signature", 400)
     try:
         user_id = payload["user_id"]
         currency = payload["currency"]
@@ -48,8 +44,7 @@ async def withdraw_balance(
 ):
     try:
         await BalanceController.withdraw_balance(user_in.tg_id, withdraw_data.currency, withdraw_data.amount)
-        payout = await request_payout(user_in.tg_id, withdraw_data.currency, withdraw_data.amount)
-        return {"payout_id": payout["payout_id"], "status": "pending"}
+        return {"payout_id"}
     except Exception as error:
         logging.error(f"Withdraw error: {error}")
         raise HTTPException(f"Withdraw failed: {error}", 400)
