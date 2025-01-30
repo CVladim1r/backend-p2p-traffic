@@ -48,7 +48,7 @@ class BalanceController:
 
         balance = await UserBalance.get_or_none(user_id=user_id, currency=currency)
         if not balance or balance.balance < amount:
-            raise HTTPException(status_code=400, detail="Insufficient funds")
+            raise HTTPException(status_code=402, detail="Insufficient funds")
 
         check = await crypto_service.create_withdrawal(
             user_id=user_id,
