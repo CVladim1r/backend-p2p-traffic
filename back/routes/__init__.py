@@ -6,6 +6,7 @@ from .user import router as user_router
 from .other import router as other_router
 from .orders import router as orders_router
 from .balance import router as balance_router
+
 router = APIRouter()
 
 router.include_router(auth_router, prefix="/auth", tags=["Auth"])

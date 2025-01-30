@@ -8,13 +8,19 @@ class CryptoPayService:
             network=Networks.TEST_NET if IS_TESTNET else Networks.MAIN_NET
         )
 
+    async def set_webhook(self, url: str):
+        await self.crypto.set_webhook(url=url)
+
     async def create_invoice(
         self,
         user_id: int,
         amount: float,
-        asset: str = "TON",
+        asset: str = "JET" if IS_TESTNET else "TON",
         description: str = "Пополнение баланса"
     ):
+        if IS_TESTNET and asset != "JET":
+            raise ValueError("Testnet поддерживает только JET")
+
         return await self.crypto.create_invoice(
             asset=asset,
             amount=amount,

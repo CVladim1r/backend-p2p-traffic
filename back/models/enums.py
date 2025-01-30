@@ -7,16 +7,17 @@ class AdStatus(str, Enum):
     REJECTED = "Rejected"
 
 class TransactionType(str, Enum):
-    DEPOSIT = "Deposit"
-    WITHDRAWAL = "Withdrawal"
+    DEPOSIT = "deposit"     # Пополнение
+    WITHDRAWAL = "withdrawal" # Вывод
+    FEE = "fee"             # Комиссия
+    REFERRAL = "referral"   # Реферальные
 
 class TransactionCurrencyType(str, Enum):
-    USDT = "Tether"
-    TON = "Toncoin"
-    NOT = "Notcoin"
-    BITCOIN = "Bitcoin"
-    SOLANA = "Solana"
-
+    TON = "TON"
+    BTC = "BTC"
+    USDT = "USDT"
+    JET = "JET" 
+    
     @property
     def label_en(self):
         return self.value

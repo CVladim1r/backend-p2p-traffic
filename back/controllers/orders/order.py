@@ -1,4 +1,5 @@
 from typing import Any, Dict, List
+from decimal import Decimal
 
 from tortoise.exceptions import DoesNotExist
 from tortoise.transactions import in_transaction
@@ -8,11 +9,19 @@ from back.controllers.user import UserController
 from back.errors import APIExceptionModel, APIException
 from back.models import Ads, Deals, Transactions, Users
 from back.models.enums import AdStatus, DealStatus
+from back.utils.cryptobot import crypto_service
 
 import logging
 
 
 class OrderController(BaseUserController):
+    
+    @staticmethod
+    async def calculate_commission(price: Decimal) -> Decimal:
+        rates = await crypto_service.get_exchange_rates()
+        ton_rate = next(r for r in rates if r.source == "TON" and r.target == "USD")
+        return (price * Decimal('0.10')) / Decimal(ton_rate.rate)
+    
 
     @staticmethod
     async def create_ad(ad_data: Dict[str, Any], user_in) -> Ads:

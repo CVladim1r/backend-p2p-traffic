@@ -1,14 +1,23 @@
 import logging
 
+from decimal import Decimal
+from datetime import datetime
+
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 from tortoise.contrib.fastapi import register_tortoise
+from aiocryptopay.models.update import Update
 
 from back.auth.auth import JWTBearer
-from back.config import TORTOISE_ORM, debug
+from back.config import TORTOISE_ORM, CRYPTBOT_WEBHOOK_URL, debug
+
 from back.errors import APIException
 from back.routes import router
+from back.utils.cryptobot import crypto_service
+from back.controllers.balance import BalanceController
+from back.models.transactions import Transactions
+from back.models.enums import TransactionStatus
 
 
 logging.basicConfig(
@@ -40,6 +49,45 @@ app.add_middleware(
 
 
 register_tortoise(app, add_exception_handlers=True, config=TORTOISE_ORM)
+
+
+
+@app.post("/webhook/cryptobot", summary="Webhook Endpoint", description="Check API health")
+async def cryptobot_webhook(request: Request):
+    body = await request.body()
+    if not crypto_service.crypto.check_signature(
+        body,
+        request.headers.get("crypto-pay-api-signature")
+    ):
+        raise HTTPException(403, "Invalid signature")
+    
+    update = Update.parse_raw(body)
+    
+    if update.update_type == "invoice_paid":
+        invoice = update.payload
+        user_id = int(invoice.description.split("UserID: ")[-1])
+        amount = Decimal(invoice.amount)
+        
+        await BalanceController.update_balance(
+            user_id=user_id,
+            currency=invoice.asset,
+            amount=amount
+        )
+        
+        await Transactions.filter(
+            cryptobot_invoice_id=invoice.invoice_id
+        ).update(
+            status=TransactionStatus.SUCCESSFUL,
+            update_at=datetime.utcnow()
+        )
+    elif update.update_type == "invoice_expired":
+        invoice = update.payload
+        await Transactions.filter(cryptobot_invoice_id=invoice.invoice_id).update(
+            status=TransactionStatus.FAILED,
+            update_at=datetime.utcnow()
+        )
+    
+    return {"status": "ok"}
 
 
 @app.get("/", summary="Root Endpoint", description="Check API health", dependencies=[Depends(JWTBearer())])
