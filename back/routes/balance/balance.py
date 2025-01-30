@@ -1,59 +1,30 @@
-import aiohttp
 import logging
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends
 from decimal import Decimal
 from back.auth.auth import JWTBearer
 
 from back.controllers.balance import BalanceController
-from back.views.balance.balance import BalanceDepositIn, BalanceWithdrawIn, UserBalanceOut
-from back.views.auth.user import AuthUserOut
-from back.auth.auth import get_user
 
 router = APIRouter(dependencies=[Depends(JWTBearer())])
 
-
-
-@router.post("/balance/deposit", response_model=UserBalanceOut)
-async def deposit_balance(
-    deposit_data: BalanceDepositIn = Body(...),
-    user_in: AuthUserOut = Depends(get_user),
+@router.post("/deposit")
+async def create_deposit(
+    # currency: str,
+    amount: float,
+    user_id: int = Depends(JWTBearer())
 ):
-    try:
-        return {"invoice_url"}
-    except Exception as error:
-        logging.error(f"Deposit error: {error}")
-        raise HTTPException(f"Deposit failed: {error}", 400)
+    deposit_url = await BalanceController.create_deposit(user_id, Decimal(amount))
+    return {"url": deposit_url}
 
-@router.post("/balance/webhook")
-async def cryptobot_webhook(payload: dict = Body(...)):
-    try:
-        user_id = payload["user_id"]
-        currency = payload["currency"]
-        amount = Decimal(payload["amount"])
-        await BalanceController.update_balance(user_id, currency, amount)
-        return {"status": "success"}
-    except Exception as error:
-        logging.error(f"Webhook processing failed: {error}")
-        raise HTTPException(f"Webhook failed: {error}", 400)
-
-@router.post("/balance/withdraw", response_model=UserBalanceOut)
-async def withdraw_balance(
-    withdraw_data: BalanceWithdrawIn = Body(...),
-    user_in: AuthUserOut = Depends(get_user),
+@router.post("/withdraw")
+async def withdraw_funds(
+    currency: str,
+    amount: float,
+    user_id: int = Depends(JWTBearer())
 ):
-    try:
-        await BalanceController.withdraw_balance(user_in.tg_id, withdraw_data.currency, withdraw_data.amount)
-        return {"payout_id"}
-    except Exception as error:
-        logging.error(f"Withdraw error: {error}")
-        raise HTTPException(f"Withdraw failed: {error}", 400)
-
-
-
-
-
-
+    check_url = await BalanceController.process_withdrawal(user_id, Decimal(amount), currency)
+    return {"check_url": check_url}
 
 
 

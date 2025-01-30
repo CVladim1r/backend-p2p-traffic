@@ -12,6 +12,10 @@ class Transactions(models.Model):
     type = fields.CharEnumField(enum_type=TransactionCurrencyType)
     status = fields.CharEnumField(enum_type=TransactionStatus)
 
+    cryptobot_invoice_id = fields.CharField(max_length=255, null=True)  # ID инвойса в Cryptobot
+    cryptobot_check_id = fields.CharField(max_length=255, null=True)    # ID чека в Cryptobot
+    spend_id = fields.CharField(max_length=64, null=True) 
+    
     created_at = fields.DatetimeField(auto_now_add=True)
 
     class Meta:
