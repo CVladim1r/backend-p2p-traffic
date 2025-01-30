@@ -5,9 +5,8 @@ from tortoise.exceptions import DoesNotExist
 from typing import List
 
 from back.auth.auth import get_user
-from back.models import Ads, Deals
 from back.models.enums import Categories
-from back.views.ads import AdCreate, AdOut, DealCreate, DealOut
+from back.views.ads import AdCreate, AdOut, DealCreate, DealOut, AdCreateOut
 from back.views.auth.user import AuthUserOut
 from back.controllers.user import UserController
 from back.controllers.orders import OrderController
@@ -17,16 +16,19 @@ router = APIRouter()
 
 @router.post(
     "/new_ad", 
-    response_model=AdOut, 
+    response_model=AdCreateOut, 
     responses={400: {"description": "Bad Request"}}
 )
 async def create_ad(
     ad_data: AdCreate, 
     user_in: AuthUserOut = Depends(get_user),
 ):
+    print(ad_data)
+
     try:
         ad = await OrderController.create_ad(user_in=user_in, ad_data=ad_data)
-        return ad
+        return AdCreateOut(uuid=ad.uuid, created_at=ad.created_at)
+
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
