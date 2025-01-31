@@ -1,9 +1,7 @@
 import logging
 
 from decimal import Decimal
-from fastapi import HTTPException
 from uuid import UUID
-from aiocryptopay.exceptions import CryptoPayAPIError
 
 from back.config import IS_TESTNET
 from back.errors import APIException
@@ -69,38 +67,32 @@ class BalanceController:
         if not balance or balance.balance < amount:
             raise APIException(status_code=402, error="Insufficient funds")
 
-        try:
-            check = await crypto_service.create_withdrawal(
-                user_id=user.tg_id,
-                amount=float(withdraw_amount),
-                asset=currency.value
-            )
-            
-            await BalanceController.update_balance(user.uuid, currency, -amount)
-            
-            await BalanceController._create_transaction(
-                user_id=user.uuid,
-                amount=withdraw_amount,
-                currency=currency,
-                transaction_type=TransactionType.WITHDRAWAL,
-                cryptobot_data={"cryptobot_check_id": check.check_id}
-            )
-            
-            await BalanceController._create_transaction(
-                user_id=user.uuid,
-                amount=commission,
-                currency=currency,
-                transaction_type=TransactionType.FEE
-            )
-            
-            return check.bot_check_url
+
+        check = await crypto_service.create_withdrawal(
+            user_id=user.tg_id,
+            amount=float(withdraw_amount),
+            asset=currency.value
+        )
         
-        except CryptoPayAPIError as e:
-            logging.error(f"CryptoPay error: {e}")
-            raise APIException(
-                status_code=400,
-                error=f"Withdrawal failed: {e.message}",
-            )
+        await BalanceController.update_balance(user.uuid, currency, -amount)
+        
+        await BalanceController._create_transaction(
+            user_id=user.uuid,
+            amount=withdraw_amount,
+            currency=currency,
+            transaction_type=TransactionType.WITHDRAWAL,
+            cryptobot_data={"cryptobot_check_id": check.check_id}
+        )
+        
+        await BalanceController._create_transaction(
+            user_id=user.uuid,
+            amount=commission,
+            currency=currency,
+            transaction_type=TransactionType.FEE
+        )
+        
+        return check.bot_check_url
+
     @staticmethod
     async def update_balance(
         user_id: int,
@@ -116,7 +108,7 @@ class BalanceController:
         )
         
         if balance.balance + amount < 0:
-            raise HTTPException(status_code=400, detail="Insufficient funds")
+            raise APIException(status_code=400, detail="Insufficient funds")
         
         balance.balance += amount
         await balance.save()
