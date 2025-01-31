@@ -66,16 +66,20 @@ async def cryptobot_webhook(request: Request):
     update = Update.parse_raw(body)
     
     if update.update_type == "invoice_paid":
-        invoice = update.payload
-        user_id = int(invoice.description.split("UserID: ")[-1])
+        print(f"Received invoice description: {invoice.description}")  # Логирование
+
+        try:
+            user_id = int(invoice.description.split("UserID: ")[-1])
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid invoice description: {invoice.description}")
+
         amount = Decimal(invoice.amount)
-        
         await BalanceController.update_balance(
             user_id=user_id,
             currency=invoice.asset,
             amount=amount
         )
-        
+
         await Transactions.filter(
             cryptobot_invoice_id=invoice.invoice_id
         ).update(
