@@ -1,4 +1,5 @@
 import logging
+import json
 
 from decimal import Decimal
 from datetime import datetime
@@ -62,25 +63,33 @@ async def cryptobot_webhook(request: Request):
         request.headers.get("crypto-pay-api-signature")
     ):
         raise HTTPException(403, "Invalid signature")
-    
+
     update = Update.parse_raw(body)
     logging.info(f"Update: {update}, body_text: {body_text}")
 
     if update.update_type == "invoice_paid":
-        logging.info(f"Received invoice: {invoice}")
+        invoice = update.payload
+        # logging.info(f"Received invoice: {invoice}")
+        user_data = invoice.description
+        logging.info(f"Received invoice: {user_data}")
 
-        user_data = update.payload
         try:
-            user_id = int(user_data['UserID']['sub'])
+            user_data_dict = json.loads(user_data)
+            user_data_dict = eval(user_data)
+            user_id = int(user_data_dict['sub'])
+            logging.info(f"Extracted UserID: {user_id}")
         except (ValueError, KeyError):
             raise HTTPException(status_code=400, detail="Invalid or missing UserID in invoice description")
 
         amount = Decimal(invoice.amount)
+        logging.info(f"Parsed amount: {amount}")
+
         await BalanceController.update_balance(
             user_id=user_id,
             currency=invoice.asset,
             amount=amount
         )
+        logging.info(f"Balance updated for UserID {user_id} with {amount} {invoice.asset}")
 
         await Transactions.filter(
             cryptobot_invoice_id=invoice.invoice_id
@@ -88,13 +97,22 @@ async def cryptobot_webhook(request: Request):
             status=TransactionStatus.SUCCESSFUL,
             update_at=datetime.utcnow()
         )
+        logging.info(f"Transaction {invoice.invoice_id} marked as successful")
+
     elif update.update_type == "invoice_expired":
-        invoice = update.payload
-        await Transactions.filter(cryptobot_invoice_id=invoice.invoice_id).update(
-            status=TransactionStatus.FAILED,
-            update_at=datetime.utcnow()
-        )
-    
+        try:
+            invoice = update.payload
+            logging.info(f"Invoice expired received: {invoice}")
+
+            await Transactions.filter(cryptobot_invoice_id=invoice.invoice_id).update(
+                status=TransactionStatus.FAILED,
+                update_at=datetime.utcnow()
+            )
+            logging.info(f"Transaction {invoice.invoice_id} marked as failed")
+        except Exception as e:
+            logging.error(f"Error in invoice_expired handling: {e}")
+            raise HTTPException(status_code=500, detail="Internal server error")
+
     return {"status": "ok"}
 
 
