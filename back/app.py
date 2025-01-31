@@ -56,7 +56,7 @@ register_tortoise(app, add_exception_handlers=True, config=TORTOISE_ORM)
 async def cryptobot_webhook(request: Request):
     body = await request.body()
     body_text = body.decode("UTF-8")  # Декодируем bytes в строку
-    
+
     if not crypto_service.crypto.check_signature(
         body_text,
         request.headers.get("crypto-pay-api-signature")
@@ -64,14 +64,16 @@ async def cryptobot_webhook(request: Request):
         raise HTTPException(403, "Invalid signature")
     
     update = Update.parse_raw(body)
-    
-    if update.update_type == "invoice_paid":
-        print(f"Received invoice description: {invoice.description}")  # Логирование
+    logging.INFO(f"Update: {update}, body_text: {body_text}")
 
+    if update.update_type == "invoice_paid":
+        logging.INFO(f"Received invoice: {invoice}")
+
+        user_data = update.payload
         try:
-            user_id = int(invoice.description.split("UserID: ")[-1])
-        except ValueError:
-            raise HTTPException(status_code=400, detail=f"Invalid invoice description: {invoice.description}")
+            user_id = int(user_data['UserID']['sub'])
+        except (ValueError, KeyError):
+            raise HTTPException(status_code=400, detail="Invalid or missing UserID in invoice description")
 
         amount = Decimal(invoice.amount)
         await BalanceController.update_balance(
