@@ -1,5 +1,6 @@
 import logging
 import json
+import ast
 
 from decimal import Decimal
 from datetime import datetime
@@ -69,35 +70,51 @@ async def cryptobot_webhook(request: Request):
 
     if update.update_type == "invoice_paid":
         invoice = update.payload
-        # logging.info(f"Received invoice: {invoice}")
+        logging.info(f"Received invoice: {invoice}")
         user_data = invoice.description
         logging.info(f"Received invoice: {user_data}")
 
         try:
-            user_data_dict = json.loads(user_data)
-            user_data_dict = eval(user_data)
-            user_id = int(user_data_dict['sub'])
+            parts = user_data.split("UserID: ")
+            if len(parts) < 2:
+                raise ValueError("UserID not found in invoice description")
+            dict_str = parts[1].strip()
+            user_data_dict = ast.literal_eval(dict_str)
+            user_id = int(user_data_dict.get('sub'))
             logging.info(f"Extracted UserID: {user_id}")
-        except (ValueError, KeyError):
-            raise HTTPException(status_code=400, detail="Invalid or missing UserID in invoice description")
+        except (ValueError, IndexError, SyntaxError, KeyError) as e:
+            logging.error(f"Error parsing user data from description: {user_data}")
+            logging.error(f"Error details: {e}")
+            raise APIException(status_code=400, error="Invalid or missing UserID in invoice description")
 
-        amount = Decimal(invoice.amount)
-        logging.info(f"Parsed amount: {amount}")
 
-        await BalanceController.update_balance(
-            user_id=user_id,
-            currency=invoice.asset,
-            amount=amount
-        )
-        logging.info(f"Balance updated for UserID {user_id} with {amount} {invoice.asset}")
 
-        await Transactions.filter(
-            cryptobot_invoice_id=invoice.invoice_id
-        ).update(
-            status=TransactionStatus.SUCCESSFUL,
-            update_at=datetime.utcnow()
-        )
-        logging.info(f"Transaction {invoice.invoice_id} marked as successful")
+        try:
+            amount = Decimal(str(invoice.amount))
+        except Exception as e:
+            logging.error(f"Error parsing invoice amount: {e}")
+            raise APIException(status_code=400, error="Invalid invoice amount")
+
+
+        try:
+            await BalanceController.update_balance(
+                user_id=user_id,
+                currency=invoice.asset,
+                amount=amount
+            )
+            logging.info(f"Balance updated for UserID {user_id} with {amount} {invoice.asset}")
+
+            await Transactions.filter(
+                cryptobot_invoice_id=invoice.invoice_id
+            ).update(
+                status=TransactionStatus.SUCCESSFUL,
+                update_at=datetime.utcnow()
+            )
+            logging.info(f"Transaction {invoice.invoice_id} marked as successful")
+        except Exception as e:
+            logging.error(f"Error updating balance or transaction: {e}")
+            raise APIException(status_code=500, error="Internal server error")
+
 
     elif update.update_type == "invoice_expired":
         try:
@@ -111,7 +128,7 @@ async def cryptobot_webhook(request: Request):
             logging.info(f"Transaction {invoice.invoice_id} marked as failed")
         except Exception as e:
             logging.error(f"Error in invoice_expired handling: {e}")
-            raise HTTPException(status_code=500, detail="Internal server error")
+            raise APIException(status_code=500, error="Internal server error")
 
     return {"status": "ok"}
 

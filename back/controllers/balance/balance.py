@@ -5,6 +5,7 @@ from back.models.transactions import Transactions
 from back.models.users import UserBalance
 from back.utils.cryptobot import crypto_service
 from back.models.enums import TransactionType, TransactionStatus, TransactionCurrencyType
+from back.controllers.user import UserController
 from back.config import IS_TESTNET
 
 class BalanceController:
@@ -81,8 +82,10 @@ class BalanceController:
         currency: TransactionCurrencyType,
         amount: Decimal
     ):
+        user = UserController.get_by_tg_id(user_id)
+
         balance, _ = await UserBalance.get_or_create(
-            user_id=user_id,
+            user=user.uuid,
             currency=currency,
             defaults={"balance": Decimal("0.0")}
         )
