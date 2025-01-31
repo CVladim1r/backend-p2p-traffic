@@ -17,6 +17,7 @@ class Transactions(models.Model):
     spend_id = fields.CharField(max_length=64, null=True) 
     
     created_at = fields.DatetimeField(auto_now_add=True)
+    update_at = fields.DatetimeField(auto_now=True)
 
     class Meta:
         table = "transactions"

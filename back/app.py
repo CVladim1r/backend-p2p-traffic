@@ -108,7 +108,6 @@ async def cryptobot_webhook(request: Request):
                 cryptobot_invoice_id=invoice.invoice_id
             ).update(
                 status=TransactionStatus.SUCCESSFUL,
-                update_at=datetime.utcnow()
             )
             logging.info(f"Transaction {invoice.invoice_id} marked as successful")
         except Exception as e:
