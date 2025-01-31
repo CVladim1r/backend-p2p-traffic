@@ -64,10 +64,10 @@ async def cryptobot_webhook(request: Request):
         raise HTTPException(403, "Invalid signature")
     
     update = Update.parse_raw(body)
-    logging.INFO(f"Update: {update}, body_text: {body_text}")
+    logging.info(f"Update: {update}, body_text: {body_text}")
 
     if update.update_type == "invoice_paid":
-        logging.INFO(f"Received invoice: {invoice}")
+        logging.info(f"Received invoice: {invoice}")
 
         user_data = update.payload
         try:
