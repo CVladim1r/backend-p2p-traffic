@@ -1,6 +1,8 @@
 from decimal import Decimal
 from fastapi import HTTPException
 
+import logging
+
 from back.models.transactions import Transactions
 from back.models.users import UserBalance
 from back.utils.cryptobot import crypto_service
@@ -82,10 +84,10 @@ class BalanceController:
         currency: TransactionCurrencyType,
         amount: Decimal
     ):
-        user = UserController.get_by_tg_id(user_id)
-
+        user = await  UserController.get_by_tg_id(user_id)
+        logging.info(F"user: {user}")
         balance, _ = await UserBalance.get_or_create(
-            user=user.uuid,
+            user=user,
             currency=currency,
             defaults={"balance": Decimal("0.0")}
         )
