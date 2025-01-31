@@ -27,7 +27,7 @@ class BalanceController:
 
     @staticmethod
     async def create_deposit(user_id: int, amount: Decimal):
-        currency = TransactionCurrencyType.TON #TransactionCurrencyType.JET if IS_TESTNET else 
+        currency = TransactionCurrencyType.JET if IS_TESTNET else TransactionCurrencyType.TON
         
         invoice = await crypto_service.create_invoice(
             user_id=user_id,
@@ -44,7 +44,7 @@ class BalanceController:
         
         commission = amount * Decimal("0.02")
         withdraw_amount = amount - commission
-        currency = TransactionCurrencyType.TON # TransactionCurrencyType.JET if IS_TESTNET else 
+        currency = TransactionCurrencyType.JET if IS_TESTNET else TransactionCurrencyType.TON
 
         balance = await UserBalance.get_or_none(user_id=user_id, currency=currency)
         if not balance or balance.balance < amount:
