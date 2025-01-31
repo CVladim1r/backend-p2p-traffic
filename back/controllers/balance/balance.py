@@ -1,14 +1,19 @@
-from decimal import Decimal
-from fastapi import HTTPException
-
 import logging
 
+from decimal import Decimal
+from fastapi import HTTPException
+from uuid import UUID
+from aiocryptopay.exceptions import CryptoPayAPIError
+
+from back.config import IS_TESTNET
+from back.errors import APIException
 from back.models.transactions import Transactions
 from back.models.users import UserBalance
 from back.utils.cryptobot import crypto_service
 from back.models.enums import TransactionType, TransactionStatus, TransactionCurrencyType
+from back.models.users import Users
 from back.controllers.user import UserController
-from back.config import IS_TESTNET
+
 
 class BalanceController:
     @staticmethod
@@ -41,43 +46,61 @@ class BalanceController:
         return invoice.bot_invoice_url
 
     @staticmethod
-    async def process_withdrawal(user_id: int, amount: Decimal):
-        if amount <= 0:
-            raise HTTPException(status_code=400, detail="Invalid withdrawal amount")
+    async def process_withdrawal(user_uuid: UUID, amount: Decimal):
+        user = await Users.get(uuid=user_uuid)
+        if not user or not user.tg_id:
+            raise APIException(status_code=404, error="User not found")
         
-        commission = amount * Decimal("0.02")
-        withdraw_amount = amount - commission
-        currency = TransactionCurrencyType.TON # TransactionCurrencyType.JET if IS_TESTNET else 
+        min_withdrawal = Decimal("3.0")  # CryptoPay minimum
+        commission_rate = Decimal("0.02")
+        
+        min_required = (min_withdrawal / (1 - commission_rate)).quantize(Decimal('0.0001'))
+        if amount < min_required:
+            raise APIException(
+                status_code=400,
+                error=f"Minimum withdrawal amount is {min_required} TON (3 TON after 2% fee)"
+            )
+        
+        commission = (amount * commission_rate).quantize(Decimal('0.0001'))
+        withdraw_amount = (amount - commission).quantize(Decimal('0.0001'))
 
-        balance = await UserBalance.get_or_none(user_id=user_id, currency=currency)
+        currency = TransactionCurrencyType.TON
+        balance = await UserBalance.get_or_none(user=user, currency=currency)
         if not balance or balance.balance < amount:
-            raise HTTPException(status_code=402, detail="Insufficient funds")
+            raise APIException(status_code=402, error="Insufficient funds")
 
-        check = await crypto_service.create_withdrawal(
-            user_id=user_id,
-            amount=withdraw_amount,
-            asset=currency.value
-        )
+        try:
+            check = await crypto_service.create_withdrawal(
+                user_id=user.tg_id,
+                amount=float(withdraw_amount),
+                asset=currency.value
+            )
+            
+            await BalanceController.update_balance(user.uuid, currency, -amount)
+            
+            await BalanceController._create_transaction(
+                user_id=user.uuid,
+                amount=withdraw_amount,
+                currency=currency,
+                transaction_type=TransactionType.WITHDRAWAL,
+                cryptobot_data={"cryptobot_check_id": check.check_id}
+            )
+            
+            await BalanceController._create_transaction(
+                user_id=user.uuid,
+                amount=commission,
+                currency=currency,
+                transaction_type=TransactionType.FEE
+            )
+            
+            return check.bot_check_url
         
-        await BalanceController.update_balance(user_id, currency, -amount)
-        
-        await BalanceController._create_transaction(
-            user_id=user_id,
-            amount=withdraw_amount,
-            currency=currency,
-            transaction_type=TransactionType.WITHDRAWAL,
-            cryptobot_data={"cryptobot_check_id": check.check_id}
-        )
-        
-        await BalanceController._create_transaction(
-            user_id=user_id,
-            amount=commission,
-            currency=currency,
-            transaction_type=TransactionType.FEE
-        )
-        
-        return check.bot_check_url
-    
+        except CryptoPayAPIError as e:
+            logging.error(f"CryptoPay error: {e}")
+            raise APIException(
+                status_code=400,
+                error=f"Withdrawal failed: {e.message}",
+            )
     @staticmethod
     async def update_balance(
         user_id: int,

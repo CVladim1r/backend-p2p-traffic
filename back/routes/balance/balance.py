@@ -34,8 +34,6 @@ async def withdraw_funds(
 
 
 
-
-
 # @router.post(
 #     "/balance/deposit",
 #     response_model=UserBalanceOut,
