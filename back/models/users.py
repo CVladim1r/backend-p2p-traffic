@@ -30,6 +30,8 @@ class UserBalance(models.Model):
     currency = fields.CharEnumField(TransactionCurrencyType, max_length=20)
     balance = fields.DecimalField(max_digits=18, decimal_places=8, default=0.0)
 
+    reserved = fields.DecimalField(max_digits=20, decimal_places=6, default=0)
+    
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
 

@@ -8,24 +8,20 @@ from iso8601 import parse_date, ParseError
 
 from back.controllers.base import BaseUserController, T
 from back.controllers.user import UserController
-from back.errors import APIExceptionModel, APIException
-from back.models import Ads, Deals, Transactions, Users
+from back.errors import APIException
+from back.models import Ads, Deals, Users
 from back.models.enums import AdStatus, DealStatus
 from back.utils.cryptobot import crypto_service
 from back.views.ads import AdOut, AdCreate
 
-import logging
-
 
 class OrderController(BaseUserController):
-    
     @staticmethod
     async def calculate_commission(price: Decimal) -> Decimal:
         rates = await crypto_service.get_exchange_rates()
         ton_rate = next(r for r in rates if r.source == "TON" and r.target == "USD")
         return (price * Decimal('0.10')) / Decimal(ton_rate.rate)
     
-
     @staticmethod
     async def create_ad(ad_data: AdCreate, user_in):
         user = await Users.get(tg_id=user_in.tg_id)
@@ -49,7 +45,6 @@ class OrderController(BaseUserController):
             is_paid_promotion=ad_data.is_paid_promotion,
             status=def_status,
         )
-        
         return ad
     
     @staticmethod
@@ -60,11 +55,9 @@ class OrderController(BaseUserController):
             query = query.filter(category=category)
 
         ads = await query
-
         result = []
         for ad in ads:
             user = ad.user_id
-
 
             ad_out = AdOut(
                 uuid=ad.uuid,
@@ -89,7 +82,6 @@ class OrderController(BaseUserController):
             )
 
             result.append(ad_out)
-        
         return result
 
     @staticmethod
@@ -121,7 +113,4 @@ class OrderController(BaseUserController):
                 seller_id=ad.user_id,
                 status=DealStatus.PENDING,
             )
-            # Пример транзакции для резервирования средств (если требуется)
-            # await Transactions.create(..., using_db=transaction)
-
         return deal

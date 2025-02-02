@@ -1,17 +1,11 @@
-from decimal import Decimal
-from typing import Any, Dict, List
-from uuid import uuid4
-from tortoise.exceptions import DoesNotExist
-from tortoise.transactions import in_transaction
+import logging
 
-from back.controllers.base import BaseUserController, T
+from decimal import Decimal
+from uuid import uuid4
+
 from back.controllers.balance import BalanceController
-from back.errors import APIExceptionModel, APIException
-from back.models import UserBalance
 from back.models.enums import TransactionCurrencyType
 from back.utils.cryptobot import crypto_service
-
-import logging
 
 
 class ReferralController:

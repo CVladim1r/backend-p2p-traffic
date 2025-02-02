@@ -16,7 +16,7 @@ class CryptoPayService:
         user_id: int,
         amount: float,
         asset: str = "JET" if IS_TESTNET else "TON",
-        description: str = "Пополнение баланса"
+        description: str = "Пополнение баланса аккаунта BBT"
     ):
         if IS_TESTNET and asset != "JET":
             raise ValueError("Testnet поддерживает только JET")
@@ -24,14 +24,19 @@ class CryptoPayService:
         return await self.crypto.create_invoice(
             asset=asset,
             amount=amount,
-            description=f"{description} | UserID: {user_id}"
+            description=f"{description}"
         )
 
-    async def create_withdrawal(self, user_id: int, amount: float, asset: str = "TON"):
+    async def create_withdrawal(
+            self, 
+            user_id: int, 
+            amount: float, 
+            asset: str = "TON",
+    ):
         return await self.crypto.create_check(
             asset=asset,
             amount=amount,
-            pin_to_user_id=user_id
+            pin_to_user_id=user_id,
         )
 
     async def get_balance(self):
