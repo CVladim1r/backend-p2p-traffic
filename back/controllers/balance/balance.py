@@ -40,7 +40,7 @@ class BalanceController:
         user_id: int, 
         amount: Decimal
     ):
-        currency = TransactionCurrencyType.JET if IS_TESTNET else TransactionCurrencyType.TON
+        currency = TransactionCurrencyType.TON # TransactionCurrencyType.JET if IS_TESTNET else
         
         invoice = await crypto_service.create_invoice(
             user_id=user_id,
