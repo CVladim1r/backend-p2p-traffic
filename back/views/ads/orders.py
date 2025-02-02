@@ -1,8 +1,15 @@
-from pydantic import BaseModel, UUID4, Field
 from typing import Optional
 from decimal import Decimal
 from datetime import datetime
-from back.models.enums import Categories, AdStatus, DealStatus, TransactionCurrencyType
+from pydantic.types import List
+from pydantic import BaseModel, UUID4
+
+from back.models.enums import (
+    Categories, 
+    AdStatus, 
+    DealStatus, 
+    TransactionCurrencyType
+)
 
 
 class AdCreate(BaseModel):
@@ -14,7 +21,7 @@ class AdCreate(BaseModel):
     link_to_channel: str
     maximum_traffic: int
 
-    price: float # ] = Field(gt=0, description="Price must be greater than 0")
+    price: float
     guaranteed_traffic: bool
     minimum_traffic: int
     conditions: str
@@ -26,7 +33,6 @@ class AdCreateOut(BaseModel):
 
     class Config:
         orm_mode = True
-
 
 class AdOut(BaseModel):
     uuid: UUID4
@@ -56,10 +62,37 @@ class AdOut(BaseModel):
     class Config:
         orm_mode = True
 
-
 class DealCreate(BaseModel):
     ad_uuid: UUID4
 
+# class DealOut(BaseModel):
+#     uuid: UUID4
+#     ad_uuid: UUID4
+#     buyer_id: int
+#     seller_id: int
+#     status: DealStatus
+#     is_frozen: bool
+#     support_request: bool
+#     created_at: datetime
+#     updated_at: datetime
+
+#     class Config:
+#         orm_mode = True
+
+class ChatMessage(BaseModel):
+    sender_id: int
+    text: str
+    timestamp: datetime
+
+class ChatOut(BaseModel):
+    uuid: UUID4
+    deal_uuid: UUID4
+    messages: List[ChatMessage]
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
 
 class DealOut(BaseModel):
     uuid: UUID4
@@ -67,10 +100,13 @@ class DealOut(BaseModel):
     buyer_id: int
     seller_id: int
     status: DealStatus
+    price: Decimal 
+    currency: TransactionCurrencyType
     is_frozen: bool
     support_request: bool
     created_at: datetime
     updated_at: datetime
+    chat: Optional[ChatOut] = None  # Cвязь с чатом
 
     class Config:
         orm_mode = True

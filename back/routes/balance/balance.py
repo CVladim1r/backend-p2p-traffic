@@ -8,28 +8,37 @@ from back.auth.auth import JWTBearer, get_user
 from back.controllers.balance import BalanceController
 from back.views.auth.user import AuthUserOut
 from back.models import Users
-from back.errors import APIException
+from back.errors import APIException, APIExceptionModel
+from back.views.balance import UserBalanceOut
 
 router = APIRouter(dependencies=[Depends(JWTBearer())])
 
-@router.post("/deposit")
+@router.post(
+    "/deposit",
+    response_model=UserBalanceOut,   
+    responses={400: {"model": APIExceptionModel}}, 
+    )
 async def create_deposit(
     amount: float,
     user_id: int = Depends(JWTBearer())
-):
+) -> UserBalanceOut:
     deposit_url = await BalanceController.create_deposit(user_id, Decimal(amount))
-    return {"url": deposit_url}
+    return {"balance": str(deposit_url)}
 
-@router.post("/withdraw")
+@router.post(
+    "/withdraw",
+    response_model=UserBalanceOut,   
+    responses={400: {"model": APIExceptionModel}}, 
+    )
 async def withdraw_funds(
     amount: float,
     user_in: AuthUserOut = Depends(get_user),
-):
+) -> UserBalanceOut:
     user = await Users.get(tg_id=user_in.tg_id)
     if not user:
         raise APIException(detail="User not found", status_code=404)
     check_url = await BalanceController.process_withdrawal(user.uuid, Decimal(amount))
-    return {"check_url": check_url}
+    return {"balance": str(check_url)}
 
 
 
