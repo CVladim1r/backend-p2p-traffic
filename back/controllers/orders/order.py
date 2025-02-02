@@ -93,8 +93,8 @@ class OrderController(BaseUserController):
         return ad
 
     @staticmethod
-    async def create_deal(deal_data: Dict[str, Any], tg_id: int) -> Deals:
-        user = await UserController.get_by_tg_id(tg_id)
+    async def create_deal(deal_data: Dict[str, Any], user_id: int) -> Deals:
+        user = await UserController.get_by_tg_id(user_id)
         if not user:
             raise APIException(detail="User not found", status_code=404)
 

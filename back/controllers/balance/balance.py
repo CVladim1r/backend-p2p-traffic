@@ -3,6 +3,7 @@ import logging
 from decimal import Decimal
 from uuid import UUID
 from tortoise.transactions import in_transaction
+from aiocryptopay.exceptions import CodeErrorFactory
 
 from back.config import IS_TESTNET
 from back.errors import APIException
@@ -59,7 +60,7 @@ class BalanceController:
         
         commission = amount * Decimal("0.02")
         withdraw_amount = amount - commission
-        currency = TransactionCurrencyType.TON  # TransactionCurrencyType.JET if IS_TESTNET else 
+        currency = TransactionCurrencyType.TON
 
         balance = await UserBalance.get_or_none(
             user_id=user_id, 
@@ -75,11 +76,24 @@ class BalanceController:
                 error=f"Insufficient funds in {currency.value} currency"
             )
 
-        check = await crypto_service.create_withdrawal(
-            user_id=user_id,
-            amount=float(withdraw_amount),
-            asset=currency.value
-        )
+        try:
+            check = await crypto_service.create_withdrawal(
+                user_id=user_id,
+                amount=withdraw_amount,
+                asset=currency.value
+            )
+        except Exception as e:
+            if isinstance(e, CodeErrorFactory) and e.code == 400 and "NOT_ENOUGH_COINS" in str(e):
+                raise APIException(
+                    status_code=400,
+                    error="Not enough coins in the CryptoPay account to process the withdrawal."
+                )
+            else:
+                logging.error(f"CryptoPay API Error: {e}")
+                raise APIException(
+                    status_code=500,
+                    error="An error occurred while processing the withdrawal."
+                )
 
         async with in_transaction():
             await BalanceController.update_balance(
