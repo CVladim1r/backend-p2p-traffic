@@ -76,7 +76,7 @@ class BalanceController:
             )
 
         check = await crypto_service.create_withdrawal(
-            user_id=user.tg_id,
+            user_id=user_id,
             amount=float(withdraw_amount),
             asset=currency.value
         )
