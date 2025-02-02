@@ -1,4 +1,6 @@
 import logging
+import json
+import ast
 
 from decimal import Decimal
 from datetime import datetime
@@ -56,39 +58,77 @@ register_tortoise(app, add_exception_handlers=True, config=TORTOISE_ORM)
 async def cryptobot_webhook(request: Request):
     body = await request.body()
     body_text = body.decode("UTF-8")  # Декодируем bytes в строку
-    
+
     if not crypto_service.crypto.check_signature(
         body_text,
         request.headers.get("crypto-pay-api-signature")
     ):
         raise HTTPException(403, "Invalid signature")
-    
+
     update = Update.parse_raw(body)
-    
+    logging.info(f"Update: {update}, body_text: {body_text}")
+
     if update.update_type == "invoice_paid":
         invoice = update.payload
-        user_id = int(invoice.description.split("UserID: ")[-1])
-        amount = Decimal(invoice.amount)
-        
-        await BalanceController.update_balance(
-            user_id=user_id,
-            currency=invoice.asset,
-            amount=amount
-        )
-        
-        await Transactions.filter(
-            cryptobot_invoice_id=invoice.invoice_id
-        ).update(
-            status=TransactionStatus.SUCCESSFUL,
-            update_at=datetime.utcnow()
-        )
+        logging.info(f"Received invoice: {invoice}")
+        user_data = invoice.description
+        logging.info(f"Received invoice: {user_data}")
+
+        try:
+            parts = user_data.split("UserID: ")
+            if len(parts) < 2:
+                raise ValueError("UserID not found in invoice description")
+            dict_str = parts[1].strip()
+            user_data_dict = ast.literal_eval(dict_str)
+            user_id = int(user_data_dict.get('sub'))
+            logging.info(f"Extracted UserID: {user_id}")
+        except (ValueError, IndexError, SyntaxError, KeyError) as e:
+            logging.error(f"Error parsing user data from description: {user_data}")
+            logging.error(f"Error details: {e}")
+            raise APIException(status_code=400, error="Invalid or missing UserID in invoice description")
+
+
+
+        try:
+            amount = Decimal(str(invoice.amount))
+        except Exception as e:
+            logging.error(f"Error parsing invoice amount: {e}")
+            raise APIException(status_code=400, error="Invalid invoice amount")
+
+
+        try:
+            await BalanceController.update_balance(
+                user_id=user_id,
+                currency=invoice.asset,
+                amount=amount
+            )
+            logging.info(f"Balance updated for UserID {user_id} with {amount} {invoice.asset}")
+
+            await Transactions.filter(
+                cryptobot_invoice_id=invoice.invoice_id
+            ).update(
+                status=TransactionStatus.SUCCESSFUL,
+            )
+            logging.info(f"Transaction {invoice.invoice_id} marked as successful")
+        except Exception as e:
+            logging.error(f"Error updating balance or transaction: {e}")
+            raise APIException(status_code=500, error="Internal server error")
+
+
     elif update.update_type == "invoice_expired":
-        invoice = update.payload
-        await Transactions.filter(cryptobot_invoice_id=invoice.invoice_id).update(
-            status=TransactionStatus.FAILED,
-            update_at=datetime.utcnow()
-        )
-    
+        try:
+            invoice = update.payload
+            logging.info(f"Invoice expired received: {invoice}")
+
+            await Transactions.filter(cryptobot_invoice_id=invoice.invoice_id).update(
+                status=TransactionStatus.FAILED,
+                update_at=datetime.utcnow()
+            )
+            logging.info(f"Transaction {invoice.invoice_id} marked as failed")
+        except Exception as e:
+            logging.error(f"Error in invoice_expired handling: {e}")
+            raise APIException(status_code=500, error="Internal server error")
+
     return {"status": "ok"}
 
 

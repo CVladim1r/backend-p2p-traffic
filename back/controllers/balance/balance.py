@@ -1,10 +1,17 @@
+import logging
+
 from decimal import Decimal
+from uuid import UUID
 from tortoise.transactions import in_transaction
 
+from back.config import IS_TESTNET
+from back.errors import APIException
 from back.models.transactions import Transactions
 from back.models.users import UserBalance
 from back.utils.cryptobot import crypto_service
 from back.models.enums import TransactionType, TransactionStatus, TransactionCurrencyType
+from back.models.users import Users
+from back.controllers.user import UserController
 from back.errors import APIException
 from back.config import IS_TESTNET
 
@@ -69,8 +76,8 @@ class BalanceController:
             )
 
         check = await crypto_service.create_withdrawal(
-            user_id=user_id,
-            amount=withdraw_amount,
+            user_id=user.tg_id,
+            amount=float(withdraw_amount),
             asset=currency.value
         )
 
@@ -124,8 +131,10 @@ class BalanceController:
         currency: TransactionCurrencyType,
         amount: Decimal
     ):
+        user = await  UserController.get_by_tg_id(user_id)
+        logging.info(F"user: {user}")
         balance, _ = await UserBalance.get_or_create(
-            user_id=user_id,
+            user=user,
             currency=currency,
             defaults={
                 "balance": Decimal("0.0"),
@@ -143,6 +152,7 @@ class BalanceController:
         balance.balance = new_balance
         await balance.save()
         
+
         # balance.balance += amount
         # await balance.save()
 

@@ -18,8 +18,8 @@ class CryptoPayService:
         asset: str = "JET" if IS_TESTNET else "TON",
         description: str = "Пополнение баланса аккаунта BBT"
     ):
-        if IS_TESTNET and asset != "JET":
-            raise ValueError("Testnet поддерживает только JET")
+        # if IS_TESTNET and asset != "JET":
+        #     raise ValueError("Testnet поддерживает только JET")
 
         return await self.crypto.create_invoice(
             asset=asset,
