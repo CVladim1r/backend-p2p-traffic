@@ -95,6 +95,9 @@ class DealCreate(BaseModel):
 #     class Config:
 #         orm_mode = True
 
+class PinChatRequest(BaseModel):
+    is_pinned: bool
+
 class ChatMessage(BaseModel):
     sender_tg_id: int
     sender_name: str
@@ -114,9 +117,23 @@ class ChatMessageCreate(BaseModel):
 class ChatOut(BaseModel):
     uuid: UUID4
     # deal_uuid: UUID4
+    is_pinned: bool
     messages: List[ChatMessage]
     created_at: datetime
     updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+class ChatAllOut(BaseModel):
+    uuid: UUID4
+    deal_uuid: UUID4
+    is_pinned: bool
+    counterpart_id: UUID4
+    counterpart_isvip: bool
+    counterpart_photo: str
+    counterpart_username: str
+    user_role: str
 
     class Config:
         orm_mode = True

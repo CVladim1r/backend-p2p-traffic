@@ -17,8 +17,10 @@ from back.views.ads import (
     DealCreate, 
     DealOut, 
     ChatOut,
+    ChatAllOut,
     ChatMessage,
-    ChatMessageCreate
+    ChatMessageCreate,
+    PinChatRequest
 )
 
 router = APIRouter()
@@ -163,3 +165,41 @@ async def send_chat_message(
         return message
     except APIException as e:
         raise HTTPException(status_code=e.status_code, detail=str(e.detail))
+    
+@router.patch(
+    "/deals/{chat_uuid}/chat/pin",
+    response_model=ChatOut,
+    responses={
+        403: {"model": APIExceptionModel},
+        404: {"model": APIExceptionModel}
+    }
+)
+async def pin_chat(
+    chat_uuid: uuid.UUID,
+    pin_data: PinChatRequest,
+    user: AuthUserOut = Depends(get_user)
+):
+    try:
+        chat = await OrderController.update_chat_pin(
+            chat_uuid=str(chat_uuid),
+            is_pinned=pin_data.is_pinned,
+        )
+        return chat
+    except APIException as e:
+        raise HTTPException(status_code=e.status_code, detail=str(e.detail))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+@router.get(
+    "/chats",
+    response_model=List[ChatAllOut],
+    responses={403: {"model": APIExceptionModel}}
+)
+async def get_all_chats(
+    user: AuthUserOut = Depends(get_user)
+):
+    try:
+        chats = await OrderController.get_all_user_chats(user_id=user.tg_id)
+        return chats
+    except APIException as e:
+        raise APIException(status_code=e.status_code, error=str(e.error))
