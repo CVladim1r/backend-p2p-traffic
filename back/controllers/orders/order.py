@@ -21,7 +21,7 @@ from back.views.ads import (
     DealOut,
     DealCreate,
     ChatMessage,
-    ChatMessageGet,
+    ChatAllOut,
     ChatMessageCreate,
     ChatOut,
 )
@@ -110,14 +110,14 @@ class OrderController(BaseUserController):
         try:
             ad = await Ads.get(uuid=deal_data.ad_uuid).prefetch_related("user_id")
         except DoesNotExist:
-            raise APIException(detail="Ad not found", status_code=404)
+            raise APIException(error="Ad not found", status_code=404)
         
         # logging.info(ad.user_id)
 
         logging.info(f"byer={user.uuid}, seller_id={ad.user_id.uuid}, ad_uuid={ad.uuid}")
 
         if ad.user_id == user.tg_id:
-            raise APIException(detail="You cannot buy your own ad", status_code=400)    
+            raise APIException(error="You cannot buy your own ad", status_code=400)    
 
         async with in_transaction():
             deal = await Deals.create(
@@ -149,7 +149,7 @@ class OrderController(BaseUserController):
         sender = await UserController.get_user_by_uuid(sender_id)
         
         if sender.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
-            raise APIException(detail="Access denied", status_code=403)
+            raise APIException(error="Access denied", status_code=403)
         
         chat = await Chats.get(deal=deal)
         new_message = {
@@ -170,7 +170,7 @@ class OrderController(BaseUserController):
         user = await UserController.get_by_tg_id(user_id)
         
         if user.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
-            raise APIException(detail="Access denied", status_code=403)
+            raise APIException(error="Access denied", status_code=403)
         
         chat = await Chats.get(deal=deal)
         return chat
@@ -201,3 +201,49 @@ class OrderController(BaseUserController):
             ))
 
         return result
+    
+    @staticmethod
+    async def update_chat_pin(chat_uuid: str, is_pinned: bool):
+        try:
+            chat = await Chats.get(uuid=chat_uuid).prefetch_related('deal')
+            chat.is_pinned = is_pinned
+            await chat.save()
+
+            return chat
+        
+        except DoesNotExist:
+            raise APIException(status_code=404, error="Deal not found")
+        except Exception as e:
+            raise APIException(status_code=400, error=str(e))
+        
+    @staticmethod
+    async def get_all_user_chats(user_id: int) -> List[ChatAllOut]:
+        try:
+            user = await UserController.get_by_tg_id(user_id)
+            deals = await Deals.filter(
+                Q(buyer_id=user) | Q(seller_id=user)
+            ).prefetch_related("seller_id", "buyer_id", "chat")
+            
+            result = []
+            for deal in deals:
+                chat = await deal.chat
+                is_seller = user.uuid == deal.seller_id.uuid
+                counterpart = deal.buyer_id if is_seller else deal.seller_id
+                
+                result.append(
+                    ChatAllOut(
+                        uuid=chat.uuid,
+                        deal_uuid=deal.uuid,
+                        is_pinned=chat.is_pinned,
+                        counterpart_id=counterpart.uuid,
+                        counterpart_isvip=counterpart.is_vip,
+                        counterpart_photo=counterpart.profile_photo or "",
+                        counterpart_username=counterpart.username or "",
+                        user_role="seller" if is_seller else "buyer"
+                    )
+                )
+            return result
+        except DoesNotExist:
+            raise APIException(status_code=404, error="User not found")
+        except Exception as e:
+            raise APIException(status_code=400, error=str(e))

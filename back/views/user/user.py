@@ -35,7 +35,6 @@ class UserData(BaseModel):
     profile_photo: str | None
 
 
-
 class CreateUserRequest(BaseModel):
     tg_id: int
     username: str | None = None
