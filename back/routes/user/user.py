@@ -53,7 +53,7 @@ async def get_user_main_data(
         raise APIException(f"User with tg_id {user_in.tg_id} not found", 404)
 
     balances = await UserBalance.filter(user=user).all()
-    balance_data = {balance.currency: str(balance.balance) for balance in balances}
+    balance_data = {balance.currency: float(balance.balance) for balance in balances}
 
     response = UserMainPageOut(
         uuid=user.uuid,
@@ -72,7 +72,6 @@ async def get_user_main_data(
     
     return response
 
-# TODO DELETE THIS SHIIIIIIIIIT
 @router.post(
     "/update_user_photo",
     responses={400: {"model": APIExceptionModel}},

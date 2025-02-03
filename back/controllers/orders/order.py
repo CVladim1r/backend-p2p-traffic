@@ -1,19 +1,28 @@
-from typing import Any, Dict, List
+import logging
+
+from uuid import UUID
+from typing import List
 from decimal import Decimal
 from datetime import datetime
-import logging
+
 from tortoise.exceptions import DoesNotExist
 from tortoise.transactions import in_transaction
-from iso8601 import parse_date, ParseError
 
-from back.controllers.base import BaseUserController, T
+from back.controllers.base import BaseUserController
 from back.controllers.user import UserController
 from back.errors import APIException
-from back.models import Ads, Deals, Users
+from back.models import Ads, Deals, Chats, Users
 from back.models.enums import AdStatus, DealStatus
 from back.utils.cryptobot import crypto_service
-from back.views.ads import AdOut, AdCreate, DealCreate
-
+from back.views.ads import (
+    AdOut, 
+    AdCreate, 
+    DealOut,
+    DealCreate,
+    ChatMessage,
+    ChatMessageCreate,
+    ChatOut,
+)
 
 class OrderController(BaseUserController):
     @staticmethod
@@ -95,19 +104,59 @@ class OrderController(BaseUserController):
     @staticmethod
     async def create_deal(deal_data: DealCreate, user_id: int) -> Deals: 
         user = await UserController.get_by_tg_id(user_id)
+        # logging.info(f"user_id: {user_id}, user: {user}")
+
         try:
-            ad = await Ads.get(uuid=deal_data.ad_uuid)
+            ad = await Ads.get(uuid=deal_data.ad_uuid).prefetch_related("user_id")
         except DoesNotExist:
             raise APIException(detail="Ad not found", status_code=404)
-        logging.info(ad.user_id)
-        # if ad.user_id.uuid == user.uuid:
-        #     raise APIException(detail="You cannot buy your own ad", status_code=400)
+        
+        # logging.info(ad.user_id)
+
+        logging.info(f"byer={user.uuid}, seller_id={ad.user_id.uuid}, ad_uuid={ad.uuid}")
+
+        if ad.user_id == user.tg_id:
+            raise APIException(detail="You cannot buy your own ad", status_code=400)    
 
         async with in_transaction():
             deal = await Deals.create(
-                ad_uuid=ad,
-                buyer_id=user,
-                seller_id=ad.user_id,
+                ad_uuid=ad.uuid,
+                buyer_id=user.uuid,
+                seller_id=ad.user_id.uuid,
+                price=ad.price,
                 status=DealStatus.PENDING,
+                currency=ad.currency_type
             )
+
+            await Chats.create(deal=deal)
         return deal
+    
+    @staticmethod
+    async def send_chat_message(deal_uuid: UUID, message_data: ChatMessageCreate, sender_id: UUID) -> ChatMessage:
+        deal = await Deals.get(uuid=deal_uuid).prefetch_related("buyer_id", "seller_id")
+        sender = await UserController.get_by_uuid(sender_id)
+        
+        if sender.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
+            raise APIException(detail="Access denied", status_code=403)
+        
+        chat = await Chats.get(deal=deal)
+        new_message = {
+            "sender_id": str(sender.uuid),
+            "text": message_data.text,
+            "timestamp": datetime.utcnow().isoformat()
+        }
+        chat.messages.append(new_message)
+        await chat.save()
+        
+        return ChatMessage(**new_message)
+
+    @staticmethod
+    async def get_deal_chat(deal_uuid: UUID, user_id: UUID) -> ChatOut:
+        deal = await Deals.get(uuid=deal_uuid).prefetch_related("buyer_id", "seller_id")
+        user = await UserController.get_by_uuid(user_id)
+        
+        if user.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
+            raise APIException(detail="Access denied", status_code=403)
+        
+        chat = await Chats.get(deal=deal)
+        return await ChatOut.from_tortoise_orm(chat)
