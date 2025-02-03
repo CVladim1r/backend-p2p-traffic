@@ -1,17 +1,25 @@
 import uuid
-import logging
 
-from fastapi import APIRouter, HTTPException, Depends, Query, Body
 from typing import List
+from fastapi import APIRouter, HTTPException, Depends, Query
 
 from back.auth.auth import get_user
 from back.errors import APIException, APIExceptionModel
 from back.models.enums import Categories
-from back.views.ads import AdCreate, AdOut, DealCreate, DealOut, AdCreateOut, ChatOut, AdOutOne
 from back.views.auth.user import AuthUserOut
 from back.controllers.user import UserController
 from back.controllers.orders import OrderController
-
+from back.views.ads import (
+    AdOut,
+    AdCreate,
+    AdOutOne,
+    AdCreateOut,
+    DealCreate, 
+    DealOut, 
+    ChatOut,
+    ChatMessage,
+    ChatMessageCreate
+)
 
 router = APIRouter()
 
@@ -29,6 +37,7 @@ async def create_ad(
         return AdCreateOut(uuid=ad.uuid, created_at=ad.created_at)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
 
 @router.get(
     "/ads", 
@@ -86,7 +95,10 @@ async def get_user_deals(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/deals/{deal_uuid}", response_model=DealOut)
+@router.get(
+    "/deals/{deal_uuid}", 
+    response_model=DealOut
+)
 async def get_deal(deal_uuid: uuid.UUID, user_id: int = Depends(UserController.get_by_tg_id)):
     try:
         deal = await OrderController.get_deal(deal_uuid=deal_uuid, user_id=user_id)
@@ -113,6 +125,7 @@ async def confirm_deal(
     except APIException as e:
         raise HTTPException(status_code=e.status_code, detail=str(e.detail))
 
+
 @router.get(
     "/deals/{deal_uuid}/chat",
     response_model=ChatOut,
@@ -128,5 +141,28 @@ async def get_chat(
             tg_id=user.tg_id
         )
         return chat
+    except APIException as e:
+        raise HTTPException(status_code=e.status_code, detail=str(e.detail))
+    
+@router.post(
+    "/deals/{deal_uuid}/chat/messages",
+    response_model=ChatMessage,
+    responses={403: {"description": "Forbidden"}}
+)
+async def send_chat_message(
+    deal_uuid: uuid.UUID,
+    message_data: ChatMessageCreate,
+    user: AuthUserOut = Depends(get_user)
+):
+    user_data = await UserController.get_by_tg_id(user.tg_id)
+    sender_uuid = user_data.uuid
+
+    try:
+        message = await OrderController.send_chat_message(
+            deal_uuid=deal_uuid,
+            message_data=message_data,
+            sender_id=sender_uuid
+        )
+        return message
     except APIException as e:
         raise HTTPException(status_code=e.status_code, detail=str(e.detail))

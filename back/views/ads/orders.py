@@ -50,7 +50,6 @@ class AdOutOne(BaseModel):
     status: AdStatus
 
 
-
 class AdOut(BaseModel):
     uuid: UUID4
     category: Categories
@@ -101,6 +100,10 @@ class ChatMessage(BaseModel):
     text: str
     timestamp: datetime
 
+class ChatMessageCreate(BaseModel):
+    text: str
+    sender_id: int 
+
 class ChatOut(BaseModel):
     uuid: UUID4
     deal_uuid: UUID4
@@ -123,7 +126,7 @@ class DealOut(BaseModel):
     support_request: bool
     created_at: datetime
     updated_at: datetime
-    chat: Optional[ChatOut] = None  # Cвязь с чатом
+    # chat: Optional[ChatOut] = None  # Cвязь с чатом
 
     class Config:
         orm_mode = True
