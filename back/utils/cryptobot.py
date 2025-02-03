@@ -21,7 +21,7 @@ class CryptoPayService:
         description_with_id = f"{description} | UserID:{user_id}"
         # if IS_TESTNET and asset != "JET":
         #     raise ValueError("Testnet поддерживает только JET")
-
+        
         return await self.crypto.create_invoice(
             asset=asset,
             amount=amount,
