@@ -80,24 +80,22 @@ async def cryptobot_webhook(request: Request):
             # parts = user_data.split("UserID:")[1].strip()
             # if len(parts) < 2:
             #     raise ValueError("UserID not found in invoice description")
-            # dict_str = parts[1].strip()
+            # dict_str = parts[1].strip)(
             user_id_part = user_data.split("UserID:")[1].strip()
-            user_id = int(user_id_part)
+            user_id_dict = eval(user_id_part)  # You can use `json.loads` if it's valid JSON
+            if not isinstance(user_id_dict, dict) or "sub" not in user_id_dict:
+                raise ValueError("Invalid user data format in invoice description")
+            user_id = int(user_id_dict["sub"])
             logging.info(f"Extracted UserID: {user_id}")
         except (ValueError, IndexError, SyntaxError, KeyError) as e:
             logging.error(f"Error parsing user data from description: {user_data}")
             logging.error(f"Error details: {e}")
             raise APIException(status_code=400, error="Invalid or missing UserID in invoice description")
-
-
-
         try:
             amount = Decimal(str(invoice.amount))
         except Exception as e:
             logging.error(f"Error parsing invoice amount: {e}")
             raise APIException(status_code=400, error="Invalid invoice amount")
-
-
         try:
             await BalanceController.update_balance(
                 user_id=user_id,
