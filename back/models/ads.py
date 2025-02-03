@@ -38,11 +38,12 @@ class Deals(models.Model):
     ad_uuid = fields.ForeignKeyField("models.Ads", related_name="deals")
     buyer_id = fields.ForeignKeyField("models.Users", related_name="bought_deals")
     seller_id = fields.ForeignKeyField("models.Users", related_name="sold_deals")
-
+    price = fields.DecimalField(max_digits=10, decimal_places=2)
+    currency = fields.CharEnumField(enum_type=TransactionCurrencyType)
     status = fields.CharEnumField(enum_type=DealStatus)
+    
     is_frozen = fields.BooleanField(default=False)
     support_request = fields.BooleanField(default=False)
-
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
 

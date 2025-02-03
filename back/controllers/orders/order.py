@@ -5,6 +5,7 @@ from typing import List
 from decimal import Decimal
 from datetime import datetime
 
+from tortoise.expressions import Q
 from tortoise.exceptions import DoesNotExist
 from tortoise.transactions import in_transaction
 
@@ -20,6 +21,7 @@ from back.views.ads import (
     DealOut,
     DealCreate,
     ChatMessage,
+    ChatMessageGet,
     ChatMessageCreate,
     ChatOut,
 )
@@ -104,7 +106,6 @@ class OrderController(BaseUserController):
     @staticmethod
     async def create_deal(deal_data: DealCreate, user_id: int) -> Deals: 
         user = await UserController.get_by_tg_id(user_id)
-        # logging.info(f"user_id: {user_id}, user: {user}")
 
         try:
             ad = await Ads.get(uuid=deal_data.ad_uuid).prefetch_related("user_id")
@@ -120,28 +121,41 @@ class OrderController(BaseUserController):
 
         async with in_transaction():
             deal = await Deals.create(
-                ad_uuid=ad.uuid,
-                buyer_id=user.uuid,
-                seller_id=ad.user_id.uuid,
+                ad_uuid=ad,
+                buyer_id=user,
+                seller_id=ad.user_id,
                 price=ad.price,
                 status=DealStatus.PENDING,
                 currency=ad.currency_type
             )
-
             await Chats.create(deal=deal)
-        return deal
+        return DealOut(
+            uuid=deal.uuid,
+            ad_uuid=deal.ad_uuid.uuid,
+            buyer_id=deal.buyer_id.uuid,
+            seller_id=deal.seller_id.uuid,
+            status=deal.status,
+            price=deal.price,
+            currency=deal.currency,
+            is_frozen=deal.is_frozen,
+            support_request=deal.support_request,
+            created_at=deal.created_at,
+            updated_at=deal.updated_at
+        )
     
     @staticmethod
     async def send_chat_message(deal_uuid: UUID, message_data: ChatMessageCreate, sender_id: UUID) -> ChatMessage:
         deal = await Deals.get(uuid=deal_uuid).prefetch_related("buyer_id", "seller_id")
-        sender = await UserController.get_by_uuid(sender_id)
+        sender = await UserController.get_user_by_uuid(sender_id)
         
         if sender.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
             raise APIException(detail="Access denied", status_code=403)
         
         chat = await Chats.get(deal=deal)
         new_message = {
-            "sender_id": str(sender.uuid),
+            "sender_name": sender.username,
+            "sender_tg_id": sender.tg_id,
+            "sender_uuid": sender_id,
             "text": message_data.text,
             "timestamp": datetime.utcnow().isoformat()
         }
@@ -151,12 +165,39 @@ class OrderController(BaseUserController):
         return ChatMessage(**new_message)
 
     @staticmethod
-    async def get_deal_chat(deal_uuid: UUID, user_id: UUID) -> ChatOut:
+    async def get_deal_chat(deal_uuid: UUID, user_id: int) -> ChatOut:
         deal = await Deals.get(uuid=deal_uuid).prefetch_related("buyer_id", "seller_id")
-        user = await UserController.get_by_uuid(user_id)
+        user = await UserController.get_by_tg_id(user_id)
         
         if user.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
             raise APIException(detail="Access denied", status_code=403)
         
         chat = await Chats.get(deal=deal)
-        return await ChatOut.from_tortoise_orm(chat)
+        return chat
+    
+    @staticmethod
+    async def get_user_deals(user_id: int, status: DealStatus = None) -> List[DealOut]:
+        user = await UserController.get_by_tg_id(user_id)
+        query = Deals.filter(Q(buyer_id=user) | Q(seller_id=user)).prefetch_related("ad_uuid", "buyer_id", "seller_id")
+        
+        if status:
+            query = query.filter(status=status)
+
+        deals = await query
+        result = []
+        for deal in deals:
+            result.append(DealOut(
+                uuid=deal.uuid,
+                ad_uuid=deal.ad_uuid.uuid,
+                buyer_id=deal.buyer_id.uuid,
+                seller_id=deal.seller_id.uuid,
+                status=deal.status,
+                price=deal.price,
+                currency=deal.currency,
+                is_frozen=deal.is_frozen,
+                support_request=deal.support_request,
+                created_at=deal.created_at,
+                updated_at=deal.updated_at
+            ))
+
+        return result

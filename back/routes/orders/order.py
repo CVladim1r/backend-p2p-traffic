@@ -138,7 +138,7 @@ async def get_chat(
     try:
         chat = await OrderController.get_deal_chat(
             deal_uuid=str(deal_uuid),
-            tg_id=user.tg_id
+            user_id=user.tg_id
         )
         return chat
     except APIException as e:
@@ -154,14 +154,11 @@ async def send_chat_message(
     message_data: ChatMessageCreate,
     user: AuthUserOut = Depends(get_user)
 ):
-    user_data = await UserController.get_by_tg_id(user.tg_id)
-    sender_uuid = user_data.uuid
-
     try:
         message = await OrderController.send_chat_message(
             deal_uuid=deal_uuid,
             message_data=message_data,
-            sender_id=sender_uuid
+            sender_id=message_data.sender_id
         )
         return message
     except APIException as e:

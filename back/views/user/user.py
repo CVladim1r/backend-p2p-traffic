@@ -16,7 +16,7 @@ class UserMainPageOut(BaseModel):
 
     deals: int
     rating: float
-    balance: Optional[Dict[str, float]] | None
+    balance: Dict[str, float] | None
     total_sales: float
     referral_id: UUID | None
     is_vip: bool

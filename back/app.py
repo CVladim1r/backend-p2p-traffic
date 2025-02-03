@@ -75,12 +75,14 @@ async def cryptobot_webhook(request: Request):
         logging.info(f"Received invoice: {user_data}")
 
         try:
-            parts = user_data.split("UserID: ")
-            if len(parts) < 2:
-                raise ValueError("UserID not found in invoice description")
-            dict_str = parts[1].strip()
-            user_data_dict = ast.literal_eval(dict_str)
-            user_id = int(user_data_dict.get('sub'))
+            if "UserID:" not in user_data:
+                raise ValueError("UserID marker not found in description")
+            # parts = user_data.split("UserID:")[1].strip()
+            # if len(parts) < 2:
+            #     raise ValueError("UserID not found in invoice description")
+            # dict_str = parts[1].strip()
+            user_id_part = user_data.split("UserID:")[1].strip()
+            user_id = int(user_id_part)
             logging.info(f"Extracted UserID: {user_id}")
         except (ValueError, IndexError, SyntaxError, KeyError) as e:
             logging.error(f"Error parsing user data from description: {user_data}")

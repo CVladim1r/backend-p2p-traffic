@@ -96,17 +96,24 @@ class DealCreate(BaseModel):
 #         orm_mode = True
 
 class ChatMessage(BaseModel):
-    sender_id: int
+    sender_tg_id: int
+    sender_name: str
+    sender_uuid: UUID4 
+    text: str
+    timestamp: datetime
+
+class ChatMessageGet(BaseModel):
+    sender_uuid: UUID4 
     text: str
     timestamp: datetime
 
 class ChatMessageCreate(BaseModel):
     text: str
-    sender_id: int 
+    sender_id: UUID4 
 
 class ChatOut(BaseModel):
     uuid: UUID4
-    deal_uuid: UUID4
+    # deal_uuid: UUID4
     messages: List[ChatMessage]
     created_at: datetime
     updated_at: datetime
@@ -117,8 +124,8 @@ class ChatOut(BaseModel):
 class DealOut(BaseModel):
     uuid: UUID4
     ad_uuid: UUID4
-    buyer_id: int
-    seller_id: int
+    buyer_id: UUID4
+    seller_id: UUID4
     status: DealStatus
     price: Decimal 
     currency: TransactionCurrencyType
