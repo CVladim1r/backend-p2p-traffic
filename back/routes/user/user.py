@@ -7,7 +7,7 @@ from back.auth.auth import get_user
 from back.models.users import UserBalance
 from back.errors import APIException, APIExceptionModel
 from back.views.auth.user import AuthUserOut
-from back.views.user.user import StartUserIn, StartUserOut, UserMainPageIn, UserMainPageOut, UserOut
+from back.views.user.user import StartUserIn, StartUserOut, UserData, UserMainPageOut
 from back.controllers.user import UserController
 
 router = APIRouter() # dependencies=[Depends(JWTBearer())]
@@ -71,6 +71,29 @@ async def get_user_main_data(
         )
     
     return response
+
+@router.get(
+    "/get_user_data",
+    response_model=UserData,
+    responses={400: {"model": APIExceptionModel}},
+)
+async def get_user_data(
+    user_tg_id: int,
+) -> UserData:
+    user = await UserController.get_by_tg_id(user_tg_id)
+
+    response = UserData(
+        tg_id=user.tg_id,
+        username=user.username,
+        rating=user.rating or 0.0,
+        total_sales=user.total_sales,
+        deals=0,
+        is_vip=user.is_vip,
+        profile_photo=user.profile_photo,
+        )
+    
+    return response
+
 
 @router.post(
     "/update_user_photo",

@@ -24,6 +24,17 @@ class UserMainPageOut(BaseModel):
     created_at: str
     updated_at: str 
 
+class UserData(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    tg_id: int
+    username: str | None
+    deals: int
+    rating: float
+    total_sales: float
+    is_vip: bool
+    profile_photo: str | None
+
+
 
 class CreateUserRequest(BaseModel):
     tg_id: int
