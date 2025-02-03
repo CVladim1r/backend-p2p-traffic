@@ -1,7 +1,7 @@
 from typing import Any, Dict, List
 from decimal import Decimal
 from datetime import datetime
-
+import logging
 from tortoise.exceptions import DoesNotExist
 from tortoise.transactions import in_transaction
 from iso8601 import parse_date, ParseError
@@ -12,7 +12,7 @@ from back.errors import APIException
 from back.models import Ads, Deals, Users
 from back.models.enums import AdStatus, DealStatus
 from back.utils.cryptobot import crypto_service
-from back.views.ads import AdOut, AdCreate
+from back.views.ads import AdOut, AdCreate, DealCreate
 
 
 class OrderController(BaseUserController):
@@ -93,23 +93,20 @@ class OrderController(BaseUserController):
         return ad
 
     @staticmethod
-    async def create_deal(deal_data: Dict[str, Any], user_id: int) -> Deals:
+    async def create_deal(deal_data: DealCreate, user_id: int) -> Deals: 
         user = await UserController.get_by_tg_id(user_id)
-        if not user:
-            raise APIException(detail="User not found", status_code=404)
-
         try:
-            ad = await Ads.get(uuid=deal_data["ad_uuid"])
+            ad = await Ads.get(uuid=deal_data.ad_uuid)
         except DoesNotExist:
             raise APIException(detail="Ad not found", status_code=404)
+        logging.info(ad.user_id)
+        # if ad.user_id.uuid == user.uuid:
+        #     raise APIException(detail="You cannot buy your own ad", status_code=400)
 
-        if ad.user_id == user.id:
-            raise APIException(detail="You cannot buy your own ad", status_code=400)
-
-        async with in_transaction() as transaction:
+        async with in_transaction():
             deal = await Deals.create(
-                ad_uuid=ad.uuid,
-                buyer_id=user.id,
+                ad_uuid=ad,
+                buyer_id=user,
                 seller_id=ad.user_id,
                 status=DealStatus.PENDING,
             )

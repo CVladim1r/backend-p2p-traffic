@@ -4,7 +4,6 @@ from tortoise import fields, models
 from .enums import AdStatus, Categories, DealStatus, TransactionCurrencyType
 
 
-''' Объявления, сделки only''' # remove in code review
 class Ads(models.Model):
     uuid = fields.UUIDField(pk=True, default=uuid4, unique=True)
     user_id = fields.ForeignKeyField("models.Users", related_name="ads")
