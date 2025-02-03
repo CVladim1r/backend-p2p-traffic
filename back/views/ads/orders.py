@@ -34,6 +34,23 @@ class AdCreateOut(BaseModel):
     class Config:
         orm_mode = True
 
+class AdOutOne(BaseModel):
+    uuid: UUID4
+    category: Categories
+    title: str
+    description: str
+    price: Optional[float]
+    guaranteed_traffic: bool
+    minimum_traffic: int | None
+    maximum_traffic: int | None
+    currency_type: Optional[TransactionCurrencyType]
+    link_to_channel: Optional[str]
+    conditions: str
+    is_paid_promotion: bool
+    status: AdStatus
+
+
+
 class AdOut(BaseModel):
     uuid: UUID4
     category: Categories

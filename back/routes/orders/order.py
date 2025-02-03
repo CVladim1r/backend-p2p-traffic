@@ -1,4 +1,5 @@
 import uuid
+import logging
 
 from fastapi import APIRouter, HTTPException, Depends, Query, Body
 from typing import List
@@ -6,7 +7,7 @@ from typing import List
 from back.auth.auth import get_user
 from back.errors import APIException, APIExceptionModel
 from back.models.enums import Categories
-from back.views.ads import AdCreate, AdOut, DealCreate, DealOut, AdCreateOut, ChatOut
+from back.views.ads import AdCreate, AdOut, DealCreate, DealOut, AdCreateOut, ChatOut, AdOutOne
 from back.views.auth.user import AuthUserOut
 from back.controllers.user import UserController
 from back.controllers.orders import OrderController
@@ -40,9 +41,11 @@ async def get_ads(category: Categories = Query(None)):
 
 @router.get(
     "/ads/{ad_uuid}", 
-    response_model=AdOut
+    response_model=AdOutOne
 )
-async def get_ad(ad_uuid: uuid.UUID):
+async def get_ad(
+    ad_uuid: uuid.UUID
+):
     try:
         ad = await OrderController.get_ad(ad_uuid=ad_uuid)
         return ad
@@ -57,22 +60,27 @@ async def get_ad(ad_uuid: uuid.UUID):
 )
 async def create_deal(
     deal_data: DealCreate, 
-    user_id: int = Depends(UserController.get_by_tg_id)
+    user_in: AuthUserOut = Depends(get_user),
 ):
     try:
-        deal = await OrderController.create_deal(user_id=user_id, deal_data=deal_data)
+        deal = await OrderController.create_deal(
+            user_id=user_in.tg_id, 
+            deal_data=deal_data
+        )
         return deal
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except APIException as e:
+        raise HTTPException(status_code=e.status_code, detail=e.detail)
 
 
 @router.get(
     "/deals", 
     response_model=List[DealOut]
 )
-async def get_user_deals(user_id: int = Depends(UserController.get_by_tg_id)):
+async def get_user_deals(
+    user_in: AuthUserOut = Depends(get_user),
+):
     try:
-        deals = await OrderController.get_user_deals(user_id=user_id)
+        deals = await OrderController.get_user_deals(user_id=user_in.tg_id)
         return deals
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
