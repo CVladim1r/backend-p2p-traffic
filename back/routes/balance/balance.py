@@ -37,7 +37,7 @@ async def withdraw_funds(
     user = await Users.get(tg_id=user_in.tg_id)
     if not user:
         raise APIException(detail="User not found", status_code=404)
-    check_url = await BalanceController.process_withdrawal(user.uuid, Decimal(amount))
+    check_url = await BalanceController.process_withdrawal(user, Decimal(amount))
     return {"balance": str(check_url)}
 
 
