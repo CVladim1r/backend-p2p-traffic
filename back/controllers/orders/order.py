@@ -157,16 +157,19 @@ class OrderController(BaseUserController):
     @staticmethod
     async def send_chat_message(deal_uuid: UUID, message_data: ChatMessageCreate, sender) -> ChatMessage:
         deal = await Deals.get(uuid=deal_uuid).prefetch_related("buyer_id", "seller_id")
-        
+        logging.info(sender)
         if sender.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
             raise APIException(error="Access denied", status_code=403)
+        
+        logging.info(sender.uuid)
+
         timestamp = datetime.now(timezone.utc).isoformat()
-        timestamp = timestamp.replace("+00:00", "Z")
+
         chat = await Chats.get(deal=deal)
         new_message = {
             "sender_name": sender.username,
             "sender_tg_id": sender.tg_id,
-            "sender_uuid": sender.uuid,
+            "sender_uuid": str(sender.uuid),
             "text": message_data.text,
             "timestamp": timestamp
         }
