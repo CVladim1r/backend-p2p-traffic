@@ -57,7 +57,7 @@ register_tortoise(app, add_exception_handlers=True, config=TORTOISE_ORM)
 @app.post("/webhook/cryptobot", summary="Webhook Endpoint", description="Check API health")
 async def cryptobot_webhook(request: Request):
     body = await request.body()
-    body_text = body.decode("UTF-8")  # Декодируем bytes в строку
+    body_text = body.decode("UTF-8")
 
     if not crypto_service.crypto.check_signature(
         body_text,
@@ -91,6 +91,7 @@ async def cryptobot_webhook(request: Request):
             logging.error(f"Error parsing user data from description: {user_data}")
             logging.error(f"Error details: {e}")
             raise APIException(status_code=400, error="Invalid or missing UserID in invoice description")
+        
         try:
             amount = Decimal(str(invoice.amount))
         except Exception as e:

@@ -8,6 +8,7 @@ load_dotenv()
 CRYPTBOT_WEBHOOK_URL = os.getenv("CRYPTBOT_WEBHOOK_URL")
 CRYPTOBOT_TOKEN = os.getenv("CRYPTOBOT_TOKEN")
 IS_TESTNET = os.getenv("IS_TESTNET")
+SECRET_KEY_DEALS = os.getenv("SECRET_KEY_DEALS")
 
 debug = os.getenv("DEBUG")
 

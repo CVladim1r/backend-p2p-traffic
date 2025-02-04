@@ -20,14 +20,16 @@ from back.config import IS_TESTNET
 class BalanceController:
     @staticmethod
     async def _create_transaction(
-        user_id: int,
+        user_id: UUID,
         amount: Decimal,
         currency: TransactionCurrencyType,
         transaction_type: TransactionType,
         cryptobot_data: dict = None
     ) -> Transactions:
+        user = await  UserController.get_by_tg_id(user_id)
+
         return await Transactions.create(
-            user_id=user_id,
+            user_id=user,
             amount=amount,
             type=currency,
             status=TransactionStatus.PENDING,
@@ -52,7 +54,7 @@ class BalanceController:
 
     @staticmethod
     async def process_withdrawal(
-        user_id: int, 
+        user, 
         amount: Decimal
     ):
         if amount <= 0:
@@ -63,7 +65,7 @@ class BalanceController:
         currency = TransactionCurrencyType.TON
 
         balance = await UserBalance.get_or_none(
-            user_id=user_id, 
+            user_id=user.uuid, 
             currency=currency
         )
         
@@ -78,7 +80,7 @@ class BalanceController:
 
         try:
             check = await crypto_service.create_withdrawal(
-                user_id=user_id,
+                user_id=user.tg_id,
                 amount=withdraw_amount,
                 asset=currency.value
             )
@@ -97,13 +99,13 @@ class BalanceController:
 
         async with in_transaction():
             await BalanceController.update_balance(
-                user_id=user_id,
+                user_id=user.tg_id,
                 currency=currency,
                 amount=-amount
             )
             
             await BalanceController._create_transaction(
-                user_id=user_id,
+                user_id=user.tg_id,
                 amount=withdraw_amount,
                 currency=currency,
                 transaction_type=TransactionType.WITHDRAWAL,
@@ -111,7 +113,7 @@ class BalanceController:
             )
             
             await BalanceController._create_transaction(
-                user_id=user_id,
+                user_id=user.tg_id,
                 amount=commission,
                 currency=currency,
                 transaction_type=TransactionType.FEE
