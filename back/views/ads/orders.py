@@ -112,13 +112,16 @@ class ChatMessageGet(BaseModel):
 
 class ChatMessageCreate(BaseModel):
     text: str
-    sender_id: UUID4 
 
 class ChatOut(BaseModel):
     uuid: UUID4
     # deal_uuid: UUID4
     is_pinned: bool
     messages: List[ChatMessage]
+    buyer_name: str
+    seller_name: str
+    seller_photo_url: str
+    buyer_photo_url: str
     created_at: datetime
     updated_at: datetime
 
@@ -138,11 +141,28 @@ class ChatAllOut(BaseModel):
     class Config:
         orm_mode = True
 
-class DealOut(BaseModel):
+class DealsOut(BaseModel):
     uuid: UUID4
     ad_uuid: UUID4
     buyer_id: UUID4
     seller_id: UUID4
+    status: DealStatus
+    price: Decimal 
+    currency: TransactionCurrencyType
+    is_frozen: bool
+    support_request: bool
+    created_at: datetime
+    updated_at: datetime
+    # chat: Optional[ChatOut] = None  # Cвязь с чатом
+
+    class Config:
+        orm_mode = True
+
+class DealOut(BaseModel):
+    uuid: UUID4
+    ad_uuid: UUID4
+    buyer_id: int
+    seller_id: int
     status: DealStatus
     price: Decimal 
     currency: TransactionCurrencyType

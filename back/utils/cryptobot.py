@@ -18,7 +18,7 @@ class CryptoPayService:
         asset: str = "TON", # "JET" if IS_TESTNET else 
         description: str = "Пополнение баланса аккаунта BBT"
     ):
-        description_with_id = f"{description} | UserID:{user_id}"
+        description_with_id = f"{description} UserID:{user_id}"
         # if IS_TESTNET and asset != "JET":
         #     raise ValueError("Testnet поддерживает только JET")
         
