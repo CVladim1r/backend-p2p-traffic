@@ -46,4 +46,32 @@ class CryptoPayService:
     async def close(self):
         await self.crypto.close()
 
+
+    async def get_all_checks(self, status: str = None):
+        all_checks = []
+        offset = 0
+        count = 1000  # API limit
+        while True:
+            current_checks = await self.crypto.get_checks(
+                status=status, 
+                offset=offset, 
+                count=count
+            )
+            if not current_checks:
+                break
+            all_checks.extend(current_checks)
+            if len(current_checks) < count:
+                break
+            offset += count
+        return all_checks
+
+    async def delete_check(self, check_id: int):
+        return await self.crypto.delete_check(check_id=check_id)
+
+    async def delete_all_checks(self):
+        checks = await self.get_all_checks()
+        for check in checks:
+            await self.delete_check(check.check_id)
+        return True
+
 crypto_service = CryptoPayService()
