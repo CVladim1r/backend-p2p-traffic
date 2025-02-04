@@ -3,7 +3,7 @@ import logging
 from uuid import UUID
 from typing import List
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, timezone
 
 from tortoise.expressions import Q
 from tortoise.exceptions import DoesNotExist
@@ -19,6 +19,7 @@ from back.views.ads import (
     AdOut, 
     AdCreate, 
     DealOut,
+    DealsOut,
     DealCreate,
     ChatMessage,
     ChatAllOut,
@@ -129,7 +130,17 @@ class OrderController(BaseUserController):
                 currency=ad.currency_type
             )
             await Chats.create(deal=deal)
-        return DealOut(
+            chat = await Chats.get(deal=deal)
+            new_message = {
+                "sender_name": "admin",
+                "sender_tg_id": "0",
+                "sender_uuid": "3f048ec2-0e18-4d53-8556-21aed104fa2f",
+                "text": "Вы успешно разместили ордер. Выполните условия и дождитесь подтверждения обеих сторон. В случае спорной ситуации открывайте спор. Мы поможем Вам разобраться в ситуации.",
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        chat.messages.append(new_message)
+        await chat.save()
+        return DealsOut(
             uuid=deal.uuid,
             ad_uuid=deal.ad_uuid.uuid,
             buyer_id=deal.buyer_id.uuid,
@@ -144,25 +155,36 @@ class OrderController(BaseUserController):
         )
     
     @staticmethod
-    async def send_chat_message(deal_uuid: UUID, message_data: ChatMessageCreate, sender_id: UUID) -> ChatMessage:
+    async def send_chat_message(deal_uuid: UUID, message_data: ChatMessageCreate, sender) -> ChatMessage:
         deal = await Deals.get(uuid=deal_uuid).prefetch_related("buyer_id", "seller_id")
-        sender = await UserController.get_user_by_uuid(sender_id)
         
         if sender.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
             raise APIException(error="Access denied", status_code=403)
-        
+        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = timestamp.replace("+00:00", "Z")
         chat = await Chats.get(deal=deal)
         new_message = {
             "sender_name": sender.username,
             "sender_tg_id": sender.tg_id,
-            "sender_uuid": sender_id,
+            "sender_uuid": sender.uuid,
             "text": message_data.text,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": timestamp
         }
         chat.messages.append(new_message)
         await chat.save()
         
         return ChatMessage(**new_message)
+
+    # @staticmethod
+    # async def get_deal_chat(deal_uuid: UUID, user_id: int) -> ChatOut:
+    #     deal = await Deals.get(uuid=deal_uuid).prefetch_related("buyer_id", "seller_id")
+    #     user = await UserController.get_by_tg_id(user_id)
+        
+    #     if user.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
+    #         raise APIException(error="Access denied", status_code=403)
+        
+    #     chat = await Chats.get(deal=deal)
+    #     return chat
 
     @staticmethod
     async def get_deal_chat(deal_uuid: UUID, user_id: int) -> ChatOut:
@@ -172,11 +194,40 @@ class OrderController(BaseUserController):
         if user.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
             raise APIException(error="Access denied", status_code=403)
         
-        chat = await Chats.get(deal=deal)
+        chat = await Chats.filter(deal=deal).select_related("deal__buyer_id", "deal__seller_id").get()
         return chat
     
     @staticmethod
-    async def get_user_deals(user_id: int, status: DealStatus = None) -> List[DealOut]:
+    async def get_user_deals(user_id: int, status: DealStatus = None) -> List[DealsOut]:
+        user = await UserController.get_by_tg_id(user_id)
+        query = Deals.filter(Q(buyer_id=user) | Q(seller_id=user)).prefetch_related("ad_uuid", "buyer_id", "seller_id")
+        
+        if status:
+            query = query.filter(status=status)
+
+        deals = await query
+        result = []
+        for deal in deals:
+            result.append(DealsOut(
+                uuid=deal.uuid,
+                ad_uuid=deal.ad_uuid.uuid,
+                buyer_id=deal.buyer_id.uuid,
+                seller_id=deal.seller_id.uuid,
+                status=deal.status,
+                price=deal.price,
+                currency=deal.currency,
+                is_frozen=deal.is_frozen,
+                support_request=deal.support_request,
+                created_at=deal.created_at,
+                updated_at=deal.updated_at
+            ))
+
+        return result
+    
+
+
+    @staticmethod
+    async def get_deal(user_id: int, status: DealStatus = None) -> List[DealOut]:
         user = await UserController.get_by_tg_id(user_id)
         query = Deals.filter(Q(buyer_id=user) | Q(seller_id=user)).prefetch_related("ad_uuid", "buyer_id", "seller_id")
         
@@ -201,6 +252,7 @@ class OrderController(BaseUserController):
             ))
 
         return result
+
     
     @staticmethod
     async def update_chat_pin(chat_uuid: str, is_pinned: bool):

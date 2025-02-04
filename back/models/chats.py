@@ -13,3 +13,19 @@ class Chats(models.Model):
 
     class Meta:
         table = "chats"
+
+    @property
+    def buyer_name(self):
+        return self.deal.buyer_id.username  # Предполагается, что в User есть поле 'name'
+
+    @property
+    def seller_name(self):
+        return self.deal.seller_id.username
+
+    @property
+    def buyer_photo_url(self):
+        return self.deal.buyer_id.profile_photo  # Предполагается, что в User есть поле 'photo_url'
+
+    @property
+    def seller_photo_url(self):
+        return self.deal.seller_id.profile_photo

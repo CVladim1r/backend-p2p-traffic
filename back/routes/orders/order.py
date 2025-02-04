@@ -15,7 +15,7 @@ from back.views.ads import (
     AdOutOne,
     AdCreateOut,
     DealCreate, 
-    DealOut, 
+    DealsOut, 
     ChatOut,
     ChatAllOut,
     ChatMessage,
@@ -66,7 +66,7 @@ async def get_ad(
 
 @router.post(
     "/deals", 
-    response_model=DealOut, 
+    response_model=DealsOut, 
     responses={400: {"model": APIExceptionModel}}, 
 )
 async def create_deal(
@@ -85,7 +85,7 @@ async def create_deal(
 
 @router.get(
     "/deals", 
-    response_model=List[DealOut]
+    response_model=List[DealsOut]
 )
 async def get_user_deals(
     user_in: AuthUserOut = Depends(get_user),
@@ -99,7 +99,7 @@ async def get_user_deals(
 
 @router.get(
     "/deals/{deal_uuid}", 
-    response_model=DealOut
+    response_model=DealsOut
 )
 async def get_deal(deal_uuid: uuid.UUID, user_id: int = Depends(UserController.get_by_tg_id)):
     try:
@@ -111,7 +111,7 @@ async def get_deal(deal_uuid: uuid.UUID, user_id: int = Depends(UserController.g
 
 @router.post(
     "/deals/{deal_uuid}/confirm", 
-    response_model=DealOut,
+    response_model=DealsOut,
     responses={400: {"model": APIExceptionModel}}, 
 )
 async def confirm_deal(
@@ -154,13 +154,14 @@ async def get_chat(
 async def send_chat_message(
     deal_uuid: uuid.UUID,
     message_data: ChatMessageCreate,
-    user: AuthUserOut = Depends(get_user)
+    user_in: AuthUserOut = Depends(get_user)
 ):
+    user = await UserController.get_by_tg_id(user_in.tg_id)
     try:
         message = await OrderController.send_chat_message(
             deal_uuid=deal_uuid,
             message_data=message_data,
-            sender_id=message_data.sender_id
+            sender=user
         )
         return message
     except APIException as e:
