@@ -5,6 +5,7 @@ from back.auth.auth import JWTBearer, get_user
 from back.utils.cryptobot import crypto_service
 from back.controllers.balance import BalanceController
 from back.models import Users
+from back.models.enums import TransactionCurrencyType
 from back.errors import APIException, APIExceptionModel
 from back.views.balance import UserBalanceOut
 from back.views.auth.user import AuthUserOut
@@ -19,10 +20,11 @@ router = APIRouter(dependencies=[Depends(JWTBearer())])
     responses={400: {"model": APIExceptionModel}}, 
     )
 async def create_deposit(
+    currency: TransactionCurrencyType,
     amount: float,
     user_id: int = Depends(JWTBearer())
 ) -> UserBalanceOut:
-    deposit_url = await BalanceController.create_deposit(user_id, Decimal(amount))
+    deposit_url = await BalanceController.create_deposit(user_id, Decimal(amount), currency)
     return {"balance": str(deposit_url)}
 
 @router.post(
@@ -32,12 +34,13 @@ async def create_deposit(
     )
 async def withdraw_funds(
     amount: float,
+    currency: TransactionCurrencyType,
     user_in: AuthUserOut = Depends(get_user),
 ) -> UserBalanceOut:
     user = await Users.get(tg_id=user_in.tg_id)
     if not user:
         raise APIException(detail="User not found", status_code=404)
-    check_url = await BalanceController.process_withdrawal(user, Decimal(amount))
+    check_url = await BalanceController.process_withdrawal(user, Decimal(amount), currency)
     return {"balance": str(check_url)}
 
 
