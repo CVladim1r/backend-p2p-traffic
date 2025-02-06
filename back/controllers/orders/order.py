@@ -322,7 +322,7 @@ class OrderController(BaseUserController):
                     completion_message = {
                         "sender_name": "system",
                         "sender_tg_id": 0,
-                        "sender_uuid": "00000000-0000-0000-0000-000000000000",
+                        "sender_uuid": "3f048ec2-0e18-4d53-8556-21aed104fa2f",
                         "text": "Сделка успешно завершена! Средства переведены продавцу",
                         "timestamp": datetime.now(timezone.utc).isoformat()
                     }
