@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 
 from back.auth.auth import get_user
 from back.errors import APIException, APIExceptionModel
-from back.models.enums import Categories
+from back.models.enums import CategoriesAds
 from back.views.auth.user import AuthUserOut
 from back.controllers.user import UserController
 from back.controllers.orders import OrderController
@@ -40,15 +40,13 @@ async def create_ad(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
 @router.get(
     "/ads", 
     response_model=List[AdOut]
 )
-async def get_ads(category: Categories = Query(None)):
+async def get_ads(category: CategoriesAds = Query(None)):
     ads = await OrderController.get_ads(category=category)
     return ads
-
 
 @router.get(
     "/ads/{ad_uuid}", 
@@ -62,7 +60,6 @@ async def get_ad(
         return ad
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
-
 
 @router.post(
     "/deals", 
@@ -82,7 +79,6 @@ async def create_deal(
     except APIException as e:
         raise HTTPException(status_code=e.status_code, detail=e.detail)
 
-
 @router.get(
     "/deals", 
     response_model=List[DealsOut]
@@ -96,7 +92,6 @@ async def get_user_deals(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
 @router.get(
     "/deals/{deal_uuid}", 
     response_model=DealsOut
@@ -108,7 +103,6 @@ async def get_deal(deal_uuid: uuid.UUID, user_id: int = Depends(UserController.g
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
     
-
 @router.post(
     "/deals/{deal_uuid}/confirm", 
     response_model=DealsOut,
@@ -126,7 +120,6 @@ async def confirm_deal(
         return deal
     except APIException as e:
         raise HTTPException(status_code=e.status_code, detail=str(e.detail))
-
 
 @router.get(
     "/deals/{deal_uuid}/chat",

@@ -46,10 +46,14 @@ class OrderController(BaseUserController):
             raise APIException(detail="User not found", status_code=404)
 
         def_status = AdStatus.ACTIVE
+
+        if ad_data.is_paid_promotion:
+            ...
         
         ad = await Ads.create(
             user_id=user,
             category=ad_data.category,
+            type_ads=ad_data.ad_type,
             title=ad_data.title,
             description=ad_data.description,
             price=ad_data.price,
@@ -89,6 +93,7 @@ class OrderController(BaseUserController):
                 link_to_channel=ad.link_to_channel,
                 conditions=ad.conditions,
                 is_paid_promotion=ad.is_paid_promotion,
+                type_ads=ad.ad_type,
                 status=ad.status,
                 user=user.uuid,
                 user_name=user.username,

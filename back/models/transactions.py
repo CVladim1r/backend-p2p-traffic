@@ -1,6 +1,5 @@
 from uuid import uuid4
 from tortoise import fields, models
-from enum import Enum
 
 from .enums import TransactionStatus, TransactionCurrencyType
 
@@ -21,12 +20,6 @@ class Transactions(models.Model):
 
     class Meta:
         table = "transactions"
-
-
-# class TransactionStatus(str, Enum):
-#     PENDING = "PENDING"
-#     SUCCESS = "SUCCESS"
-#     FAILED = "FAILED"
 
 
 # class Transaction(models.Model):

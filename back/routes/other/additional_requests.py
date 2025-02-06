@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from back.models.enums import TransactionCurrencyType, Categories
+from back.models.enums import TransactionCurrencyType, CategoriesAds
 from back.errors import APIExceptionModel
 
 router = APIRouter() # dependencies=[Depends(JWTBearer())]
@@ -22,4 +22,4 @@ async def get_transaction_currency_types() -> list[str]:
     responses={400: {"model": APIExceptionModel}},
 )
 async def get_categories() -> list[str]:
-    return Categories
+    return CategoriesAds

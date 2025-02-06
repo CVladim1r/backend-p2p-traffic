@@ -1,6 +1,7 @@
 from uuid import uuid4
 from tortoise import fields, models
 
+
 class Chats(models.Model):
     uuid = fields.UUIDField(pk=True, default=uuid4, unique=True)
     deal = fields.OneToOneField("models.Deals", related_name="chat")
@@ -16,7 +17,7 @@ class Chats(models.Model):
 
     @property
     def buyer_name(self):
-        return self.deal.buyer_id.username  # Предполагается, что в User есть поле 'name'
+        return self.deal.buyer_id.username
 
     @property
     def seller_name(self):
@@ -24,7 +25,7 @@ class Chats(models.Model):
 
     @property
     def buyer_photo_url(self):
-        return self.deal.buyer_id.profile_photo  # Предполагается, что в User есть поле 'photo_url'
+        return self.deal.buyer_id.profile_photo
 
     @property
     def seller_photo_url(self):

@@ -5,22 +5,22 @@ from pydantic.types import List
 from pydantic import BaseModel, UUID4
 
 from back.models.enums import (
-    Categories, 
+    CategoriesAds, 
     AdStatus, 
     DealStatus, 
+    TypeUserAcquisition,
     TransactionCurrencyType
 )
 
 
 class AdCreate(BaseModel):
-    category: Categories
+    category: CategoriesAds
+    ad_type: TypeUserAcquisition
     title: str
     description: str
-    
     currency_type: TransactionCurrencyType
     link_to_channel: str
     maximum_traffic: int
-
     price: float
     guaranteed_traffic: bool
     minimum_traffic: int
@@ -36,7 +36,8 @@ class AdCreateOut(BaseModel):
 
 class AdOutOne(BaseModel):
     uuid: UUID4
-    category: Categories
+    category: CategoriesAds
+    ad_type: TypeUserAcquisition
     title: str
     description: str
     price: Optional[float]
@@ -48,11 +49,10 @@ class AdOutOne(BaseModel):
     conditions: str
     is_paid_promotion: bool
     status: AdStatus
-
 
 class AdOut(BaseModel):
     uuid: UUID4
-    category: Categories
+    category: CategoriesAds
     title: str
     description: str
     price: Optional[float]
@@ -64,7 +64,8 @@ class AdOut(BaseModel):
     conditions: str
     is_paid_promotion: bool
     status: AdStatus
-
+    ad_type: TypeUserAcquisition
+    
     user: UUID4
     user_name: str
     user_photo_url: str
@@ -72,28 +73,11 @@ class AdOut(BaseModel):
     user_rating: float
     user_vip: bool
 
-    # created_at: datetime
-    # updated_at: datetime
-
     class Config:
         orm_mode = True
 
 class DealCreate(BaseModel):
     ad_uuid: UUID4
-
-# class DealOut(BaseModel):
-#     uuid: UUID4
-#     ad_uuid: UUID4
-#     buyer_id: int
-#     seller_id: int
-#     status: DealStatus
-#     is_frozen: bool
-#     support_request: bool
-#     created_at: datetime
-#     updated_at: datetime
-
-#     class Config:
-#         orm_mode = True
 
 class PinChatRequest(BaseModel):
     is_pinned: bool
@@ -115,7 +99,6 @@ class ChatMessageCreate(BaseModel):
 
 class ChatOut(BaseModel):
     uuid: UUID4
-    # deal_uuid: UUID4
     is_pinned: bool
     messages: List[ChatMessage]
     buyer_name: str
@@ -153,7 +136,6 @@ class DealsOut(BaseModel):
     support_request: bool
     created_at: datetime
     updated_at: datetime
-    # chat: Optional[ChatOut] = None  # Cвязь с чатом
 
     class Config:
         orm_mode = True
@@ -170,7 +152,6 @@ class DealOut(BaseModel):
     support_request: bool
     created_at: datetime
     updated_at: datetime
-    # chat: Optional[ChatOut] = None  # Cвязь с чатом
 
     class Config:
         orm_mode = True
