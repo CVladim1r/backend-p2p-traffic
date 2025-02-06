@@ -19,6 +19,7 @@ class AdCreate(BaseModel):
     title: str
     description: str
     currency_type: TransactionCurrencyType
+    user_currency_for_payment: TransactionCurrencyType
     link_to_channel: str
     maximum_traffic: int
     price: float

@@ -11,7 +11,6 @@ from back.models.transactions import Transactions
 from back.models.users import UserBalance
 from back.utils.cryptobot import crypto_service
 from back.models.enums import TransactionType, TransactionStatus, TransactionCurrencyType
-from back.models.users import Users
 from back.controllers.user import UserController
 from back.errors import APIException
 from back.config import IS_TESTNET
