@@ -129,7 +129,7 @@ class OrderController(BaseUserController):
                 user_name=user.username,
                 user_photo_url=user.profile_photo,
                 user_deals=int(user.total_sales),
-                user_rating=float(user.rating) if user.rating else 0.0,
+                user_rating=float(user.rating) if user.rating else 5.0,
                 user_vip=user.is_vip,
             )
 
@@ -329,6 +329,9 @@ class OrderController(BaseUserController):
                     chat.messages.append(completion_message)
                     await chat.save()
 
+                    ad = await Ads.get(uuid=deal.ad_uuid)
+                    ad.status == AdStatus.COMPLETED
+                    await ad.save()
                 return DealOutCOMPLETE.from_orm(deal)
 
         except DoesNotExist as e:
