@@ -41,7 +41,7 @@ class UserController(BaseUserController):
                     tg_id=tg_id,
                     username=username,
                     is_premium=is_premium,
-                    rating=0.00,
+                    rating=5.00,
                     total_sales=0.0,
                     is_vip=False,
                     last_login=datetime.now(timezone.utc),
