@@ -10,7 +10,7 @@ class Users(models.Model):
     username = fields.CharField(max_length=128, null=True)
     profile_photo = fields.CharField(max_length=65536, null=True)
 
-    rating = fields.DecimalField(max_digits=10, decimal_places=2, null=True)
+    rating = fields.DecimalField(max_digits=10, decimal_places=2, null=True, default=5.0)
     is_vip = fields.BooleanField(default=False)
 
     total_sales = fields.DecimalField(max_digits=18, decimal_places=2, default=0.0)
