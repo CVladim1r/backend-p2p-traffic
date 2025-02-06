@@ -14,14 +14,15 @@ from back.views.ads import (
     AdCreate,
     AdOutOne,
     AdCreateOut,
-    DealCreate, 
-    DealsOut, 
+    DealCreate,
+    DealsOut,
     ChatOut,
     ChatAllOut,
     ChatMessage,
     ChatMessageCreate,
     PinChatRequest
 )
+
 
 router = APIRouter()
 
@@ -47,6 +48,7 @@ async def create_ad(
 async def get_ads(category: CategoriesAds = Query(None)):
     ads = await OrderController.get_ads(category=category)
     return ads
+
 
 @router.get(
     "/ads/{ad_uuid}", 

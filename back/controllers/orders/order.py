@@ -11,9 +11,10 @@ from tortoise.transactions import in_transaction
 
 from back.controllers.base import BaseUserController
 from back.controllers.user import UserController
+from back.controllers.balance import BalanceController
 from back.errors import APIException
 from back.models import Ads, Deals, Chats, Users
-from back.models.enums import AdStatus, DealStatus
+from back.models.enums import AdStatus, DealStatus, TransactionCurrencyType
 from back.utils.cryptobot import crypto_service
 from back.views.ads import (
     AdOut, 
@@ -48,7 +49,15 @@ class OrderController(BaseUserController):
         def_status = AdStatus.ACTIVE
 
         if ad_data.is_paid_promotion:
-            ...
+            if ad_data.user_currency_for_payment == TransactionCurrencyType.TON:
+                amount = 1.4
+            else:
+                amount = 5
+            BalanceController.update_balance(
+                user_id=user.tg_id,
+                currency=ad_data.user_currency_for_payment,
+                amount=-amount
+            )
         
         ad = await Ads.create(
             user_id=user,
