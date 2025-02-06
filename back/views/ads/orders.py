@@ -112,6 +112,14 @@ class ChatOut(BaseModel):
     class Config:
         orm_mode = True
 
+class ChatPinOut(BaseModel):
+    uuid: UUID4
+    is_pinned: bool
+
+    class Config:
+        orm_mode = True
+
+
 class ChatAllOut(BaseModel):
     uuid: UUID4
     deal_uuid: UUID4
@@ -121,6 +129,9 @@ class ChatAllOut(BaseModel):
     counterpart_photo: str
     counterpart_username: str
     user_role: str
+    last_message_text: Optional[str] = None
+    last_message_sender_id: Optional[UUID4] = None
+    last_message_timestamp: Optional[datetime] = None
 
     class Config:
         orm_mode = True

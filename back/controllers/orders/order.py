@@ -311,7 +311,11 @@ class OrderController(BaseUserController):
                 chat = await deal.chat
                 is_seller = user.uuid == deal.seller_id.uuid
                 counterpart = deal.buyer_id if is_seller else deal.seller_id
-                
+
+
+                messages = chat.messages
+                last_message = messages[-1] if messages else None
+
                 result.append(
                     ChatAllOut(
                         uuid=chat.uuid,
@@ -321,7 +325,10 @@ class OrderController(BaseUserController):
                         counterpart_isvip=counterpart.is_vip,
                         counterpart_photo=counterpart.profile_photo or "",
                         counterpart_username=counterpart.username or "",
-                        user_role="seller" if is_seller else "buyer"
+                        user_role="seller" if is_seller else "buyer",
+                        last_message_text=last_message.get("text") if last_message else "",
+                        last_message_sender_id=last_message.get("sender_uuid") if last_message else None,
+                        last_message_timestamp=last_message.get("timestamp") if last_message else None
                     )
                 )
             return result
