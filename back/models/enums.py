@@ -16,7 +16,7 @@ class TransactionCurrencyType(str, Enum):
     TON = "TON"
     BTC = "BTC"
     USDT = "USDT"
-    JET = "JET" 
+    ETH = "ETH" 
 
 class TransactionStatus(str, Enum):
     PENDING = "Pending"
@@ -29,7 +29,7 @@ class DealStatus(str, Enum):
     COMPLETED = "Completed"
     FROZEN = "Frozen"
 
-class Categories(str, Enum):
+class CategoriesAds(str, Enum):
     GAMES = "Games"
     CRYPTOCURRENCY = "Cryptocurrency"
     EDUCATIONAL = "Educational"
@@ -46,3 +46,8 @@ class Categories(str, Enum):
     TAPALKS = "Tapalki"
     TRASH = "Trash"
     OTHER = "Other"    
+
+class TypeUserAcquisition(str, Enum): # Тип привлечения пользователей
+    POST = "Post"
+    BOT_NEWSLETTER = "Рассылка в боте"
+    GIVEAEAY_TG_CHANNEL = "Розыгрыш"

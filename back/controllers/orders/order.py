@@ -33,7 +33,12 @@ class OrderController(BaseUserController):
         rates = await crypto_service.get_exchange_rates()
         ton_rate = next(r for r in rates if r.source == "TON" and r.target == "USD")
         return (price * Decimal('0.10')) / Decimal(ton_rate.rate)
-    
+
+
+    """
+    ------------ ADS ------------
+    """
+
     @staticmethod
     async def create_ad(ad_data: AdCreate, user_in):
         user = await Users.get(tg_id=user_in.tg_id)
@@ -41,10 +46,14 @@ class OrderController(BaseUserController):
             raise APIException(detail="User not found", status_code=404)
 
         def_status = AdStatus.ACTIVE
+
+        if ad_data.is_paid_promotion:
+            ...
         
         ad = await Ads.create(
             user_id=user,
             category=ad_data.category,
+            type_ads=ad_data.ad_type,
             title=ad_data.title,
             description=ad_data.description,
             price=ad_data.price,
@@ -84,6 +93,7 @@ class OrderController(BaseUserController):
                 link_to_channel=ad.link_to_channel,
                 conditions=ad.conditions,
                 is_paid_promotion=ad.is_paid_promotion,
+                type_ads=ad.ad_type,
                 status=ad.status,
                 user=user.uuid,
                 user_name=user.username,
@@ -104,6 +114,11 @@ class OrderController(BaseUserController):
             raise APIException(detail="Ad not found", status_code=404)
         return ad
 
+
+    """
+    ----------- DEALS -----------
+    """
+
     @staticmethod
     async def create_deal(deal_data: DealCreate, user_id: int) -> Deals: 
         user = await UserController.get_by_tg_id(user_id)
@@ -113,10 +128,6 @@ class OrderController(BaseUserController):
         except DoesNotExist:
             raise APIException(error="Ad not found", status_code=404)
         
-        # logging.info(ad.user_id)
-
-        logging.info(f"byer={user.uuid}, seller_id={ad.user_id.uuid}, ad_uuid={ad.uuid}")
-
         if ad.user_id == user.tg_id:
             raise APIException(error="You cannot buy your own ad", status_code=400)    
 
@@ -140,6 +151,7 @@ class OrderController(BaseUserController):
             }
         chat.messages.append(new_message)
         await chat.save()
+
         return DealsOut(
             uuid=deal.uuid,
             ad_uuid=deal.ad_uuid.uuid,
@@ -153,58 +165,12 @@ class OrderController(BaseUserController):
             created_at=deal.created_at,
             updated_at=deal.updated_at
         )
-    
-    @staticmethod
-    async def send_chat_message(deal_uuid: UUID, message_data: ChatMessageCreate, sender) -> ChatMessage:
-        deal = await Deals.get(uuid=deal_uuid).prefetch_related("buyer_id", "seller_id")
-        logging.info(sender)
-        if sender.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
-            raise APIException(error="Access denied", status_code=403)
-        
-        logging.info(sender.uuid)
 
-        timestamp = datetime.now(timezone.utc).isoformat()
-
-        chat = await Chats.get(deal=deal)
-        new_message = {
-            "sender_name": sender.username,
-            "sender_tg_id": sender.tg_id,
-            "sender_uuid": str(sender.uuid),
-            "text": message_data.text,
-            "timestamp": timestamp
-        }
-        chat.messages.append(new_message)
-        await chat.save()
-        
-        return ChatMessage(**new_message)
-
-    # @staticmethod
-    # async def get_deal_chat(deal_uuid: UUID, user_id: int) -> ChatOut:
-    #     deal = await Deals.get(uuid=deal_uuid).prefetch_related("buyer_id", "seller_id")
-    #     user = await UserController.get_by_tg_id(user_id)
-        
-    #     if user.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
-    #         raise APIException(error="Access denied", status_code=403)
-        
-    #     chat = await Chats.get(deal=deal)
-    #     return chat
-
-    @staticmethod
-    async def get_deal_chat(deal_uuid: UUID, user_id: int) -> ChatOut:
-        deal = await Deals.get(uuid=deal_uuid).prefetch_related("buyer_id", "seller_id")
-        user = await UserController.get_by_tg_id(user_id)
-        
-        if user.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
-            raise APIException(error="Access denied", status_code=403)
-        
-        chat = await Chats.filter(deal=deal).select_related("deal__buyer_id", "deal__seller_id").get()
-        return chat
-    
     @staticmethod
     async def get_user_deals(user_id: int, status: DealStatus = None) -> List[DealsOut]:
         user = await UserController.get_by_tg_id(user_id)
         query = Deals.filter(Q(buyer_id=user) | Q(seller_id=user)).prefetch_related("ad_uuid", "buyer_id", "seller_id")
-        
+
         if status:
             query = query.filter(status=status)
 
@@ -227,8 +193,6 @@ class OrderController(BaseUserController):
 
         return result
     
-
-
     @staticmethod
     async def get_deal(user_id: int, status: DealStatus = None) -> List[DealOut]:
         user = await UserController.get_by_tg_id(user_id)
@@ -256,14 +220,38 @@ class OrderController(BaseUserController):
 
         return result
 
-    
+
+    """
+    ----------- CHATS -----------
+    """
+
+    @staticmethod
+    async def send_chat_message(deal_uuid: UUID, message_data: ChatMessageCreate, sender) -> ChatMessage:
+        deal = await Deals.get(uuid=deal_uuid).prefetch_related("buyer_id", "seller_id")
+        if sender.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
+            raise APIException(error="Access denied", status_code=403)
+        
+        timestamp = datetime.now(timezone.utc).isoformat()
+        chat = await Chats.get(deal=deal)
+
+        new_message = {
+            "sender_name": sender.username,
+            "sender_tg_id": sender.tg_id,
+            "sender_uuid": str(sender.uuid),
+            "text": message_data.text,
+            "timestamp": timestamp
+        }
+        chat.messages.append(new_message)
+        await chat.save()
+        
+        return ChatMessage(**new_message)
+
     @staticmethod
     async def update_chat_pin(chat_uuid: str, is_pinned: bool):
         try:
             chat = await Chats.get(uuid=chat_uuid).prefetch_related('deal')
             chat.is_pinned = is_pinned
             await chat.save()
-
             return chat
         
         except DoesNotExist:
@@ -271,6 +259,17 @@ class OrderController(BaseUserController):
         except Exception as e:
             raise APIException(status_code=400, error=str(e))
         
+    @staticmethod
+    async def get_deal_chat(deal_uuid: UUID, user_id: int) -> ChatOut:
+        deal = await Deals.get(uuid=deal_uuid).prefetch_related("buyer_id", "seller_id")
+        user = await UserController.get_by_tg_id(user_id)
+
+        if user.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
+            raise APIException(error="Access denied", status_code=403)
+        
+        chat = await Chats.filter(deal=deal).select_related("deal__buyer_id", "deal__seller_id").get()
+        return chat
+
     @staticmethod
     async def get_all_user_chats(user_id: int) -> List[ChatAllOut]:
         try:

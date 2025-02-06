@@ -40,10 +40,9 @@ class BalanceController:
     @staticmethod
     async def create_deposit(
         user_id: int, 
-        amount: Decimal
-    ):
-        currency = TransactionCurrencyType.TON # TransactionCurrencyType.JET if IS_TESTNET else
-        
+        amount: Decimal,
+        currency: TransactionCurrencyType
+    ):        
         invoice = await crypto_service.create_invoice(
             user_id=user_id,
             amount=float(amount),
@@ -55,14 +54,14 @@ class BalanceController:
     @staticmethod
     async def process_withdrawal(
         user, 
-        amount: Decimal
+        amount: Decimal,
+        currency: TransactionCurrencyType
     ):
         if amount <= 0:
             raise APIException(status_code=400, error="Invalid withdrawal amount")
         
         commission = amount * Decimal("0.02")
         withdraw_amount = amount - commission
-        currency = TransactionCurrencyType.TON
 
         balance = await UserBalance.get_or_none(
             user_id=user.uuid, 
