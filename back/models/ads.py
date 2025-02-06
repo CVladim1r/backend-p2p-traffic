@@ -45,6 +45,9 @@ class Deals(models.Model):
     currency = fields.CharEnumField(enum_type=TransactionCurrencyType)
     status = fields.CharEnumField(enum_type=DealStatus)
     
+    buyer_confirms = fields.BooleanField(default=False)
+    seller_confirms = fields.BooleanField(default=False)
+
     is_frozen = fields.BooleanField(default=False)
     support_request = fields.BooleanField(default=False)
     created_at = fields.DatetimeField(auto_now_add=True)

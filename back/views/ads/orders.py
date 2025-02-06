@@ -2,7 +2,7 @@ from typing import Optional
 from decimal import Decimal
 from datetime import datetime
 from pydantic.types import List
-from pydantic import BaseModel, UUID4
+from pydantic import BaseModel, ConfigDict, UUID4
 
 from back.models.enums import (
     CategoriesAds, 
@@ -151,6 +151,20 @@ class DealsOut(BaseModel):
 
     class Config:
         orm_mode = True
+        from_attributes=True
+
+class DealOutCOMPLETE(BaseModel):
+    uuid: UUID4
+    status: DealStatus
+    price: Decimal 
+    currency: TransactionCurrencyType
+    is_frozen: bool
+    support_request: bool
+
+
+    class Config:
+        orm_mode = True
+        from_attributes=True
 
 class DealOut(BaseModel):
     uuid: UUID4

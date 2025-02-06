@@ -1,7 +1,7 @@
+from uuid import uuid4
 import uuid
-
 from typing import List
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, Depends, Query
 
 from back.auth.auth import get_user
 from back.errors import APIException, APIExceptionModel
@@ -16,6 +16,7 @@ from back.views.ads import (
     AdCreateOut,
     DealCreate,
     DealsOut,
+    DealOutCOMPLETE,
     ChatOut,
     ChatPinOut,
     ChatAllOut,
@@ -50,7 +51,6 @@ async def get_ads(category: CategoriesAds = Query(None)):
     ads = await OrderController.get_ads(category=category)
     return ads
 
-
 @router.get(
     "/ads/{ad_uuid}", 
     response_model=AdOutOne
@@ -77,7 +77,7 @@ async def get_ad(
             status=ad.status,
         )
     except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise APIException(status_code=404, error=str(e))
 
 @router.post(
     "/deals", 
@@ -95,7 +95,7 @@ async def create_deal(
         )
         return deal
     except APIException as e:
-        raise HTTPException(status_code=e.status_code, detail=e.detail)
+        raise APIException(status_code=400, error=str(e))
 
 @router.get(
     "/deals", 
@@ -108,7 +108,7 @@ async def get_user_deals(
         deals = await OrderController.get_user_deals(user_id=user_in.tg_id)
         return deals
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise APIException(status_code=400, error=str(e))
 
 # @router.get(
 #     "/deals/{deal_uuid}", 
@@ -125,21 +125,18 @@ async def get_user_deals(
     
 @router.post(
     "/deals/{deal_uuid}/confirm", 
-    response_model=DealsOut,
+    response_model=DealOutCOMPLETE,
     responses={400: {"model": APIExceptionModel}}, 
 )
 async def confirm_deal(
     deal_uuid: uuid.UUID,
     user: AuthUserOut = Depends(get_user)
 ):
-    try:
-        deal = await OrderController.confirm_deal(
-            deal_uuid=str(deal_uuid),
-            tg_id=user.tg_id
-        )
-        return deal
-    except APIException as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e.detail))
+    deal = await OrderController.confirm_deal(
+        deal_uuid=deal_uuid,
+        user_id=user.tg_id
+    )
+    return deal
 
 @router.get(
     "/deals/{deal_uuid}/chat",
@@ -157,7 +154,7 @@ async def get_chat(
         )
         return chat
     except APIException as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e.detail))
+        raise APIException(status_code=400, error=str(e))
     
 @router.post(
     "/deals/{deal_uuid}/chat/messages",
@@ -178,7 +175,7 @@ async def send_chat_message(
         )
         return message
     except APIException as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e.detail))
+        raise APIException(status_code=400, error=str(e))
     
 @router.patch(
     "/deals/{chat_uuid}/chat/pin",
@@ -200,9 +197,9 @@ async def pin_chat(
         )
         return chat
     except APIException as e:
-        raise HTTPException(status_code=e.status_code, detail=str(e.detail))
+        raise APIException(status_code=400, error=str(e))
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise APIException(status_code=400, error=str(e))
     
 @router.get(
     "/chats",
