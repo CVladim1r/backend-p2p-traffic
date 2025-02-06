@@ -17,6 +17,14 @@ async def get_transaction_currency_types() -> list[str]:
     return currency_massive
 
 @router.get(
+    "/user_acquisition_type",
+    response_model=list[str],
+    responses={400: {"model": APIExceptionModel}},
+)
+async def get_user_acquisition_type() -> list[str]:
+    return TypeUserAcquisition
+
+@router.get(
     "/categories",
     response_model=list[str],
     responses={400: {"model": APIExceptionModel}},
@@ -24,10 +32,3 @@ async def get_transaction_currency_types() -> list[str]:
 async def get_categories() -> list[str]:
     return CategoriesAds
 
-@router.get(
-    "/user_acquisition_type",
-    response_model=list[str],
-    responses={400: {"model": APIExceptionModel}},
-)
-async def get_categories() -> list[str]:
-    return TypeUserAcquisition

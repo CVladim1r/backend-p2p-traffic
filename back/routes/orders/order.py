@@ -17,6 +17,7 @@ from back.views.ads import (
     DealCreate,
     DealsOut,
     ChatOut,
+    ChatPinOut,
     ChatAllOut,
     ChatMessage,
     ChatMessageCreate,
@@ -181,7 +182,7 @@ async def send_chat_message(
     
 @router.patch(
     "/deals/{chat_uuid}/chat/pin",
-    response_model=ChatOut,
+    response_model=ChatPinOut,
     responses={
         403: {"model": APIExceptionModel},
         404: {"model": APIExceptionModel}
