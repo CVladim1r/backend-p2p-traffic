@@ -13,7 +13,7 @@ from back.controllers.base import BaseUserController
 from back.controllers.user import UserController
 from back.controllers.balance import BalanceController
 from back.errors import APIException
-from back.models import Ads, Deals, Chats, Users
+from back.models import Ads, Deals, Chats, Users, UserBalance
 from back.models.enums import AdStatus, DealStatus, TransactionCurrencyType
 from back.utils.cryptobot import crypto_service
 from back.views.ads import (
@@ -42,40 +42,60 @@ class OrderController(BaseUserController):
 
     @staticmethod
     async def create_ad(ad_data: AdCreate, user_in):
-        user = await Users.get(tg_id=user_in.tg_id)
-        if not user:
-            raise APIException(detail="User not found", status_code=404)
+        try:
+            user = await Users.get(tg_id=user_in.tg_id)
+            if not user:
+                raise APIException(error="User not found", status_code=404)
 
-        def_status = AdStatus.ACTIVE
+            def_status = AdStatus.ACTIVE
+            if ad_data.is_paid_promotion:
+                amount = Decimal("1.4") if ad_data.user_currency_for_payment == TransactionCurrencyType.TON else Decimal("5")
+                try:
+                    current_balance = await UserBalance.get_or_none(
+                        user_id=user.uuid, 
+                        currency=ad_data.user_currency_for_payment
+                    )
+                    if not current_balance:
+                        raise APIException(error="No balance found for the specified currency", status_code=400)
+                    
+                    if current_balance.balance < amount:
+                        raise APIException(error="Not enough funds", status_code=400)
 
-        if ad_data.is_paid_promotion:
-            if ad_data.user_currency_for_payment == TransactionCurrencyType.TON:
-                amount = 1.4
-            else:
-                amount = 5
-            BalanceController.update_balance(
-                user_id=user.tg_id,
-                currency=ad_data.user_currency_for_payment,
-                amount=-amount
+                    await BalanceController.update_balance(
+                        user_id=user.tg_id,
+                        currency=ad_data.user_currency_for_payment,
+                        amount=-amount
+                    )
+                except APIException as e:
+                    logging.error(f"Balance error: {e.error}")
+                    raise APIException(error="Failed to process balance update", status_code=500)
+                except Exception as e:
+                    raise APIException(error="Failed to process balance update", status_code=500)
+
+            ad = await Ads.create(
+                user_id=user,
+                category=ad_data.category,
+                type_ads=ad_data.ad_type,
+                title=ad_data.title,
+                description=ad_data.description,
+                price=ad_data.price,
+                guaranteed_traffic=ad_data.guaranteed_traffic,
+                minimum_traffic=ad_data.minimum_traffic,
+                maximum_traffic=ad_data.maximum_traffic,
+                link_to_channel=ad_data.link_to_channel,
+                currency_type=ad_data.currency_type,
+                conditions=ad_data.conditions,
+                is_paid_promotion=ad_data.is_paid_promotion,
+                status=def_status,
             )
-        
-        ad = await Ads.create(
-            user_id=user,
-            category=ad_data.category,
-            type_ads=ad_data.ad_type,
-            title=ad_data.title,
-            description=ad_data.description,
-            price=ad_data.price,
-            guaranteed_traffic=ad_data.guaranteed_traffic,
-            minimum_traffic=ad_data.minimum_traffic,
-            maximum_traffic=ad_data.maximum_traffic,
-            link_to_channel=ad_data.link_to_channel,
-            currency_type=ad_data.currency_type,
-            conditions=ad_data.conditions,
-            is_paid_promotion=ad_data.is_paid_promotion,
-            status=def_status,
-        )
-        return ad
+            return ad
+
+        except APIException as e:
+            logging.error(f"APIException: {e.error}")
+            raise APIException(error="Failed to process balance update", status_code=500)
+        except Exception as e:
+            logging.error(f"Unexpected error: {e}")
+            raise APIException(error="Failed to create ad", status_code=500)
     
     @staticmethod
     async def get_ads(category: str = None) -> List[AdOut]:
@@ -102,7 +122,7 @@ class OrderController(BaseUserController):
                 link_to_channel=ad.link_to_channel,
                 conditions=ad.conditions,
                 is_paid_promotion=ad.is_paid_promotion,
-                type_ads=ad.ad_type,
+                ad_type=ad.type_ads,
                 status=ad.status,
                 user=user.uuid,
                 user_name=user.username,
@@ -116,11 +136,11 @@ class OrderController(BaseUserController):
         return result
 
     @staticmethod
-    async def get_ad(ad_uuid: str) -> Ads:
+    async def get_ad(ad_uuid: UUID) -> Ads:
         try:
             ad = await Ads.get(uuid=ad_uuid)
         except DoesNotExist:
-            raise APIException(detail="Ad not found", status_code=404)
+            raise APIException(error="Ad not found", status_code=404)
         return ad
 
 
@@ -203,9 +223,8 @@ class OrderController(BaseUserController):
         return result
     
     @staticmethod
-    async def get_deal(user_id: int, status: DealStatus = None) -> List[DealOut]:
-        user = await UserController.get_by_tg_id(user_id)
-        query = Deals.filter(Q(buyer_id=user) | Q(seller_id=user)).prefetch_related("ad_uuid", "buyer_id", "seller_id")
+    async def get_deal(deal_uuid: UUID, status: DealStatus = None) -> List[DealOut]:
+        query = Deals.filter(uuid=deal_uuid)
         
         if status:
             query = query.filter(status=status)
