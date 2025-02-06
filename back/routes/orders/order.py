@@ -39,7 +39,7 @@ async def create_ad(
         ad = await OrderController.create_ad(user_in=user_in, ad_data=ad_data)
         return AdCreateOut(uuid=ad.uuid, created_at=ad.created_at)
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise APIException(status_code=400, error=str(e))
 
 @router.get(
     "/ads", 
@@ -59,7 +59,22 @@ async def get_ad(
 ):
     try:
         ad = await OrderController.get_ad(ad_uuid=ad_uuid)
-        return ad
+        return AdOutOne(
+            uuid=ad.uuid,
+            category=ad.category,
+            ad_type=ad.type_ads,
+            title=ad.title,
+            description=ad.description,
+            price=ad.price,
+            guaranteed_traffic=ad.guaranteed_traffic,
+            minimum_traffic=ad.minimum_traffic,
+            maximum_traffic=ad.maximum_traffic,
+            currency_type=ad.currency_type,
+            link_to_channel=ad.link_to_channel,
+            conditions=ad.conditions,
+            is_paid_promotion=ad.is_paid_promotion,
+            status=ad.status,
+        )
     except Exception as e:
         raise HTTPException(status_code=404, detail=str(e))
 
@@ -94,16 +109,18 @@ async def get_user_deals(
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-@router.get(
-    "/deals/{deal_uuid}", 
-    response_model=DealsOut
-)
-async def get_deal(deal_uuid: uuid.UUID, user_id: int = Depends(UserController.get_by_tg_id)):
-    try:
-        deal = await OrderController.get_deal(deal_uuid=deal_uuid, user_id=user_id)
-        return deal
-    except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+# @router.get(
+#     "/deals/{deal_uuid}", 
+#     response_model=DealsOut
+# )
+# async def get_deal(
+#     deal_uuid: uuid.UUID, 
+# ):
+#     try:
+#         deal = await OrderController.get_deal(deal_uuid=deal_uuid)
+#         return deal
+#     except Exception as e:
+#         raise HTTPException(status_code=404, detail=str(e))
     
 @router.post(
     "/deals/{deal_uuid}/confirm", 

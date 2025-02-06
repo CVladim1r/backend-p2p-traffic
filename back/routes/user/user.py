@@ -1,10 +1,9 @@
 import logging
-import uuid
-
+from datetime import datetime
 from fastapi import APIRouter, Depends, Body
 
 from back.auth.auth import get_user
-from back.models.users import UserBalance
+from back.models import UserBalance, Deals
 from back.errors import APIException, APIExceptionModel
 from back.views.auth.user import AuthUserOut
 from back.views.user.user import StartUserIn, StartUserOut, UserData, UserMainPageOut
@@ -55,6 +54,15 @@ async def get_user_main_data(
     balances = await UserBalance.filter(user=user).all()
     balance_data = {balance.currency: float(balance.balance) for balance in balances}
 
+    balances = await UserBalance.filter(user=user).all()
+    balance_data = {balance.currency: float(balance.balance) for balance in balances}
+
+    roulette_last_spin_str = (
+        user.roulette_last_spin.isoformat() 
+        if isinstance(user.roulette_last_spin, datetime) 
+        else user.roulette_last_spin
+    )
+
     response = UserMainPageOut(
         uuid=user.uuid,
         tg_id=user.tg_id,
@@ -63,6 +71,7 @@ async def get_user_main_data(
         balance=balance_data,
         total_sales=user.total_sales,
         deals=0,
+        roulette_last_spin=roulette_last_spin_str,
         referral_id=None,
         is_vip=user.is_vip,
         profile_photo=user.profile_photo,

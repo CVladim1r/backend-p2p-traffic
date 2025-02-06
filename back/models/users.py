@@ -14,6 +14,7 @@ class Users(models.Model):
     is_vip = fields.BooleanField(default=False)
 
     total_sales = fields.DecimalField(max_digits=18, decimal_places=2, default=0.0)
+    roulette_last_spin = fields.DatetimeField(null=True)
 
     last_login = fields.DatetimeField(null=True)
     created_at = fields.DatetimeField(auto_now_add=True)

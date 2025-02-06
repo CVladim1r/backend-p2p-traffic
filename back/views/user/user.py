@@ -13,7 +13,7 @@ class UserMainPageOut(BaseModel):
     uuid: UUID
     tg_id: int
     username: str | None
-
+    roulette_last_spin: str | None
     deals: int
     rating: float
     balance: Dict[str, float] | None

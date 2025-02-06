@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from back.models.enums import TransactionCurrencyType, CategoriesAds
+from back.models.enums import TransactionCurrencyType, CategoriesAds, TypeUserAcquisition
 from back.errors import APIExceptionModel
 
 router = APIRouter() # dependencies=[Depends(JWTBearer())]
@@ -23,3 +23,11 @@ async def get_transaction_currency_types() -> list[str]:
 )
 async def get_categories() -> list[str]:
     return CategoriesAds
+
+@router.get(
+    "/user_acquisition_type",
+    response_model=list[str],
+    responses={400: {"model": APIExceptionModel}},
+)
+async def get_categories() -> list[str]:
+    return TypeUserAcquisition

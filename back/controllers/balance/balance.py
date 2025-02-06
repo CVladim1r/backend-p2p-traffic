@@ -1,7 +1,7 @@
 import logging
 
-from decimal import Decimal
 from uuid import UUID
+from decimal import Decimal
 from tortoise.transactions import in_transaction
 from aiocryptopay.exceptions import CodeErrorFactory
 
@@ -120,25 +120,6 @@ class BalanceController:
         return check.bot_check_url
 
         
-        # await BalanceController.update_balance(user_id, currency, -amount)
-        
-        # await BalanceController._create_transaction(
-        #     user_id=user_id,
-        #     amount=withdraw_amount,
-        #     currency=currency,
-        #     transaction_type=TransactionType.WITHDRAWAL,
-        #     cryptobot_data={"cryptobot_check_id": check.check_id}
-        # )
-        
-        # await BalanceController._create_transaction(
-        #     user_id=user_id,
-        #     amount=commission,
-        #     currency=currency,
-        #     transaction_type=TransactionType.FEE
-        # )
-        
-        # return check.bot_check_url
-    
     @staticmethod
     async def update_balance(
         user_id: int,
@@ -146,7 +127,6 @@ class BalanceController:
         amount: Decimal
     ):
         user = await  UserController.get_by_tg_id(user_id)
-        logging.info(F"user: {user}")
         balance, _ = await UserBalance.get_or_create(
             user=user,
             currency=currency,
@@ -166,9 +146,6 @@ class BalanceController:
         balance.balance = new_balance
         await balance.save()
         
-
-        # balance.balance += amount
-        # await balance.save()
 
     @staticmethod
     async def reserve_funds(user_id: int, currency: TransactionCurrencyType, amount: Decimal):
