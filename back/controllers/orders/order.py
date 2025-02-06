@@ -22,6 +22,7 @@ from back.views.ads import (
     DealOut,
     DealsOut,
     DealCreate,
+    DealOutCOMPLETE,
     ChatMessage,
     ChatAllOut,
     ChatMessageCreate,
@@ -248,6 +249,98 @@ class OrderController(BaseUserController):
 
         return result
 
+    @staticmethod
+    async def confirm_deal(deal_uuid: UUID, user_id: int) -> Deals:
+        try:
+            user = await UserController.get_by_tg_id(user_id)
+            async with in_transaction():
+                deal = await Deals.get(uuid=deal_uuid).select_related(
+                    "buyer_id", "seller_id", "ad_uuid"
+                )
+                if deal.status == DealStatus.COMPLETED:
+                    raise APIException(
+                        error="Deal is already completed",
+                        status_code=400
+                    )
+                chat = await Chats.get_or_none(deal=deal)
+                if not chat:
+                    raise APIException(
+                        error="Chat not found for this deal",
+                        status_code=404
+                    )
+
+                if user.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
+                    raise APIException(
+                        error="User is not part of this deal",
+                        status_code=403
+                    )
+
+                if user.uuid == deal.buyer_id.uuid:
+                    deal.buyer_confirms = True
+                    role = "buyer"
+                else:
+                    deal.seller_confirms = True
+                    role = "seller"
+
+                await deal.save()
+
+                confirmation_message = {
+                    "sender_name": "admin",
+                    "sender_tg_id": 0,
+                    "sender_uuid": "3f048ec2-0e18-4d53-8556-21aed104fa2f",
+                    "text": f"{role.capitalize()} подтвердил сделку",
+                    "timestamp": datetime.now(timezone.utc).isoformat()
+                }
+                chat.messages.append(confirmation_message)
+                await chat.save()
+
+                if deal.buyer_confirms and deal.seller_confirms:
+                    seller_balance, created = await UserBalance.get_or_create(
+                        user=deal.buyer_id,
+                        currency=deal.currency,
+                        defaults={'balance': 0}
+                    )
+
+                    if seller_balance.balance < deal.price:
+                        raise APIException(
+                            error="Insufficient buyer funds",
+                            status_code=400
+                        )
+
+                    seller_balance.balance -= deal.price
+                    await seller_balance.save()
+
+                    await BalanceController.update_balance(
+                        user_id=deal.buyer_id.tg_id,
+                        currency=deal.currency,
+                        amount=deal.price
+                    )
+
+                    deal.status = DealStatus.COMPLETED
+                    await deal.save()
+
+                    completion_message = {
+                        "sender_name": "system",
+                        "sender_tg_id": 0,
+                        "sender_uuid": "00000000-0000-0000-0000-000000000000",
+                        "text": "Сделка успешно завершена! Средства переведены продавцу",
+                        "timestamp": datetime.now(timezone.utc).isoformat()
+                    }
+                    chat.messages.append(completion_message)
+                    await chat.save()
+
+                return DealOutCOMPLETE.from_orm(deal)
+
+        except DoesNotExist as e:
+            raise APIException(
+                error=f"Deal {deal_uuid} not found",
+                status_code=404
+            )
+        except APIException as e:
+            raise e
+        except Exception as e:
+            raise APIException(error=str(e), status_code=400)
+
 
     """
     ----------- CHATS -----------
@@ -288,7 +381,7 @@ class OrderController(BaseUserController):
             raise APIException(status_code=400, error=str(e))
         
     @staticmethod
-    async def get_deal_chat(deal_uuid: UUID, user_id: int) -> ChatOut:
+    async def get_deal_chat(deal_uuid: str, user_id: int) -> ChatOut:
         deal = await Deals.get(uuid=deal_uuid).prefetch_related("buyer_id", "seller_id")
         user = await UserController.get_by_tg_id(user_id)
 

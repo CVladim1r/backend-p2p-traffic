@@ -26,6 +26,7 @@ class TransactionStatus(str, Enum):
 class DealStatus(str, Enum):
     PENDING = "Pending"
     IN_PROGRESS = "In Progress"
+    CONFIRMED = "Confirmed"
     COMPLETED = "Completed"
     FROZEN = "Frozen"
 
