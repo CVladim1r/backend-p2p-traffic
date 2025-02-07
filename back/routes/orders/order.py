@@ -60,6 +60,8 @@ async def get_ad(
 ):
     try:
         ad = await OrderController.get_ad(ad_uuid=ad_uuid)
+
+        user = ad.user_id
         return AdOutOne(
             uuid=ad.uuid,
             category=ad.category,
@@ -75,6 +77,13 @@ async def get_ad(
             conditions=ad.conditions,
             is_paid_promotion=ad.is_paid_promotion,
             status=ad.status,
+
+            user=user.uuid,
+            user_name=user.username,
+            user_photo_url=user.profile_photo,
+            user_deals=int(user.total_sales),
+            user_rating=float(user.rating) if user.rating else 5.0,
+            user_vip=user.is_vip,
         )
     except Exception as e:
         raise APIException(status_code=404, error=str(e))
