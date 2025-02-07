@@ -51,6 +51,17 @@ class AdOutOne(BaseModel):
     is_paid_promotion: bool
     status: AdStatus
 
+    user: UUID4
+    user_name: str
+    user_photo_url: str
+    user_deals: int
+    user_rating: float
+    user_vip: bool
+
+    class Config:
+        orm_mode = True
+
+
 class AdOut(BaseModel):
     uuid: UUID4
     category: CategoriesAds

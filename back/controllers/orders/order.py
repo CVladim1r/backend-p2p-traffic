@@ -139,7 +139,7 @@ class OrderController(BaseUserController):
     @staticmethod
     async def get_ad(ad_uuid: UUID) -> Ads:
         try:
-            ad = await Ads.get(uuid=ad_uuid)
+            ad = await Ads.get(uuid=ad_uuid).prefetch_related("user_id")
         except DoesNotExist:
             raise APIException(error="Ad not found", status_code=404)
         return ad
@@ -276,11 +276,21 @@ class OrderController(BaseUserController):
                     )
 
                 if user.uuid == deal.buyer_id.uuid:
+                    if deal.buyer_confirms:
+                        raise APIException(
+                            error="Buyer already confirmed the deal",
+                            status_code=400
+                        )
                     deal.buyer_confirms = True
-                    role = "buyer"
+                    role = f"{deal.buyer_id.username}"
                 else:
+                    if deal.seller_confirms:
+                        raise APIException(
+                            error="Seller already confirmed the deal",
+                            status_code=400
+                        )
                     deal.seller_confirms = True
-                    role = "seller"
+                    role = f"{deal.seller_id.username}"
 
                 await deal.save()
 
@@ -296,19 +306,22 @@ class OrderController(BaseUserController):
 
                 if deal.buyer_confirms and deal.seller_confirms:
                     seller_balance, created = await UserBalance.get_or_create(
-                        user=deal.buyer_id,
+                        user=deal.seller_id,
                         currency=deal.currency,
-                        defaults={'balance': 0}
+                        defaults={'balance': Decimal('0')}
                     )
 
                     if seller_balance.balance < deal.price:
                         raise APIException(
-                            error="Insufficient buyer funds",
+                            error="Insufficient seller funds",
                             status_code=400
                         )
 
-                    seller_balance.balance -= deal.price
-                    await seller_balance.save()
+                    await BalanceController.update_balance(
+                        user_id=deal.seller_id.tg_id,
+                        currency=deal.currency,
+                        amount=-deal.price
+                    )
 
                     await BalanceController.update_balance(
                         user_id=deal.buyer_id.tg_id,
@@ -323,15 +336,16 @@ class OrderController(BaseUserController):
                         "sender_name": "system",
                         "sender_tg_id": 0,
                         "sender_uuid": "3f048ec2-0e18-4d53-8556-21aed104fa2f",
-                        "text": "Сделка успешно завершена! Средства переведены продавцу",
+                        "text": "Сделка успешно завершена! Средства переведены исполнителю",
                         "timestamp": datetime.now(timezone.utc).isoformat()
                     }
                     chat.messages.append(completion_message)
                     await chat.save()
 
-                    ad = await Ads.get(uuid=deal.ad_uuid)
-                    ad.status == AdStatus.COMPLETED
+                    ad = deal.ad_uuid
+                    ad.status = AdStatus.COMPLETED
                     await ad.save()
+
                 return DealOutCOMPLETE.from_orm(deal)
 
         except DoesNotExist as e:
