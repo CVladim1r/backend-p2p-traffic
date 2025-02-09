@@ -9,8 +9,8 @@ from back.views.auth.user import AuthUserOut
 from back.views.user.user import StartUserIn, StartUserOut, UserData, UserMainPageOut
 from back.controllers.user import UserController
 
-router = APIRouter() # dependencies=[Depends(JWTBearer())]
 
+router = APIRouter()
 
 @router.post(
     "/create_user",
@@ -34,7 +34,6 @@ async def create_user(
     except Exception as error:
         logging.error(f"Error creating user {user_data.tg_id}, {user_data.username}: {error}")
         raise APIException(f"Create user failed: {error}", 400)
-
 
 @router.get(
     "/main_data",
@@ -102,7 +101,6 @@ async def get_user_data(
         )
     
     return response
-
 
 @router.post(
     "/update_user_photo",
