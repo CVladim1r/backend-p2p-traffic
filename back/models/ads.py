@@ -21,7 +21,7 @@ class Ads(models.Model):
     price = fields.DecimalField(max_digits=15, decimal_places=2)
     currency_type = fields.CharEnumField(enum_type=TransactionCurrencyType)
     link_to_channel = fields.CharField(max_length=256)
-    guaranteed_traffic = fields.BooleanField(default=False)
+    guaranteed_traffic = fields.IntField(null=True)
     minimum_traffic = fields.IntField(null=True)
     maximum_traffic = fields.IntField(null=True)
 

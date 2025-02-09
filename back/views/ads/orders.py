@@ -23,7 +23,7 @@ class AdCreate(BaseModel):
     link_to_channel: str
     maximum_traffic: int
     price: float
-    guaranteed_traffic: bool
+    guaranteed_traffic: int
     minimum_traffic: int
     conditions: str
     is_paid_promotion: bool
@@ -42,7 +42,7 @@ class AdOutOne(BaseModel):
     title: str
     description: str
     price: Optional[float]
-    guaranteed_traffic: bool
+    guaranteed_traffic: int
     minimum_traffic: int | None
     maximum_traffic: int | None
     currency_type: Optional[TransactionCurrencyType]
@@ -68,7 +68,7 @@ class AdOut(BaseModel):
     title: str
     description: str
     price: Optional[float]
-    guaranteed_traffic: bool
+    guaranteed_traffic: int
     minimum_traffic: int | None
     maximum_traffic: int | None
     currency_type: Optional[TransactionCurrencyType]
