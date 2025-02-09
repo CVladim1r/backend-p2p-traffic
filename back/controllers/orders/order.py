@@ -336,7 +336,7 @@ class OrderController(BaseUserController):
                         "sender_name": "system",
                         "sender_tg_id": 0,
                         "sender_uuid": "3f048ec2-0e18-4d53-8556-21aed104fa2f",
-                        "text": "Сделка успешно завершена! Средства переведены исполнителю",
+                        "text": "Сделка успешно завершена! Средства переведены исполнителю.",
                         "timestamp": datetime.now(timezone.utc).isoformat()
                     }
                     chat.messages.append(completion_message)
