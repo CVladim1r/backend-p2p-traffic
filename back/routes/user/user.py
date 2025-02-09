@@ -1,14 +1,19 @@
 import logging
+
+from decimal import Decimal
 from datetime import datetime
-from fastapi import APIRouter, Depends, Body
+from fastapi import APIRouter, Depends, Body, Query
+from tortoise.transactions import in_transaction
+from dateutil.relativedelta import relativedelta, MO
 
 from back.auth.auth import get_user
-from back.models import UserBalance, Deals
+from back.models import UserBalance, VIPStatuses
+from back.models.enums import TransactionCurrencyType
 from back.errors import APIException, APIExceptionModel
 from back.views.auth.user import AuthUserOut
 from back.views.user.user import StartUserIn, StartUserOut, UserData, UserMainPageOut
 from back.controllers.user import UserController
-
+from back.controllers.balance import BalanceController
 
 router = APIRouter()
 
@@ -119,3 +124,73 @@ async def update_user_photo(
 
     return photo_url
 
+@router.post(
+    "/update_user_vip",
+    responses={
+        400: {"model": APIExceptionModel},
+        404: {"model": APIExceptionModel},
+    },
+)
+async def update_user_vip(
+    user_in: AuthUserOut = Depends(get_user),
+    currently_type: TransactionCurrencyType = Query(None),
+):
+    async with in_transaction():
+        user = await UserController.get_by_tg_id(user_in.tg_id)
+        if not user:
+            raise APIException(f"User with tg_id {user_in.tg_id} not found", 404)
+
+        current_time = datetime.now()
+        
+        active_vip = await VIPStatuses.filter(
+            user_id=user.uuid,
+            valid_until__gte=current_time
+        ).first()
+        if active_vip:
+            raise APIException("User already has an active VIP status", 400)
+        
+        if currently_type == TransactionCurrencyType.TON:
+            ton_balance, _ = await UserBalance.get_or_create(
+                user=user,
+                currency=TransactionCurrencyType.TON,
+                defaults={"balance": Decimal("0.0"), "reserved": Decimal("0.0")}
+            )
+            if ton_balance.balance >= Decimal("10"):
+                currency = TransactionCurrencyType.TON
+                amount = Decimal("10")
+        else:
+            usdt_balance, _ = await UserBalance.get_or_create(
+                user=user,
+                currency=TransactionCurrencyType.USDT,
+                defaults={"balance": Decimal("0.0"), "reserved": Decimal("0.0")}
+            )
+            if usdt_balance.balance >= Decimal("30"):
+                currency = TransactionCurrencyType.USDT
+                amount = Decimal("30")
+
+        await BalanceController.update_balance(
+            user_id=user.tg_id,
+            currency=currency,
+            amount=-amount
+        )
+
+        existing_vip = await VIPStatuses.filter(user_id=user.uuid).order_by("-valid_until").first()
+        
+        if existing_vip:
+            new_valid_until = (
+                existing_vip.valid_until + relativedelta(months=1)
+                if existing_vip.valid_until > current_time
+                else current_time + relativedelta(months=1)
+            )
+            existing_vip.valid_until = new_valid_until
+            await existing_vip.save()
+        else:
+            await VIPStatuses.create(
+                user_id=user,
+                valid_until=current_time + relativedelta(months=1)
+            )
+
+        user.is_vip = True
+        await user.save()
+
+    return "Done"

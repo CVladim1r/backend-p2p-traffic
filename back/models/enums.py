@@ -16,7 +16,7 @@ class TransactionCurrencyType(str, Enum):
     TON = "TON"
     USDT = "USDT"
     # BTC = "BTC"
-    # ETH = "ETH" 
+    # ETH = "ETH"
 
 class TransactionStatus(str, Enum):
     PENDING = "Pending"
@@ -51,5 +51,5 @@ class CategoriesAds(str, Enum):
 class TypeUserAcquisition(str, Enum):
     # NATIVE = "Нативный"
     BOT_NEWSLETTER = "Рассылка в боте"
-    GIVEAEAY_TG_CHANNEL = "Розыгрыш"
-    POST = "Пост"
+    POST = "Пост в каналах"
+    MOTIVE = "Мотив"
