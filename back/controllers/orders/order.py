@@ -326,7 +326,7 @@ class OrderController(BaseUserController):
                     await BalanceController.update_balance(
                         user_id=deal.buyer_id.tg_id,
                         currency=deal.currency,
-                        amount=deal.price
+                        amount=-deal.price
                     )
 
                     deal.status = DealStatus.COMPLETED
