@@ -49,7 +49,7 @@ class CategoriesAds(str, Enum):
     OTHER = "Other"    
 
 class TypeUserAcquisition(str, Enum):
-    NATIVE = "Нативный"
+    # NATIVE = "Нативный"
     BOT_NEWSLETTER = "Рассылка в боте"
     GIVEAEAY_TG_CHANNEL = "Розыгрыш"
     POST = "Пост"
