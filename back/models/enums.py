@@ -48,7 +48,7 @@ class CategoriesAds(str, Enum):
     TRASH = "Trash"
     OTHER = "Other"    
 
-class TypeUserAcquisition(str, Enum): # Тип привлечения пользователей
-    POST = "Post"
+class TypeUserAcquisition(str, Enum):
+    POST = "Пост"
     BOT_NEWSLETTER = "Рассылка в боте"
     GIVEAEAY_TG_CHANNEL = "Розыгрыш"

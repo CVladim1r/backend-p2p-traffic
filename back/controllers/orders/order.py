@@ -305,13 +305,13 @@ class OrderController(BaseUserController):
                 await chat.save()
 
                 if deal.buyer_confirms and deal.seller_confirms:
-                    seller_balance, created = await UserBalance.get_or_create(
-                        user=deal.seller_id,
+                    buyer_balance, created = await UserBalance.get_or_create(
+                        user=deal.buyer_id,
                         currency=deal.currency,
                         defaults={'balance': Decimal('0')}
                     )
 
-                    if seller_balance.balance < deal.price:
+                    if buyer_balance.balance < deal.price:
                         raise APIException(
                             error="Insufficient seller funds",
                             status_code=400
@@ -326,7 +326,7 @@ class OrderController(BaseUserController):
                     await BalanceController.update_balance(
                         user_id=deal.buyer_id.tg_id,
                         currency=deal.currency,
-                        amount=+deal.price
+                        amount=deal.price
                     )
 
                     deal.status = DealStatus.COMPLETED
