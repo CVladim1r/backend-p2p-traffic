@@ -9,8 +9,8 @@ from back.models.enums import TransactionCurrencyType
 from back.errors import APIException, APIExceptionModel
 from back.views.balance import UserBalanceOut
 from back.views.auth.user import AuthUserOut
-
 from back.config import SECRET_KEY_DEALS
+
 
 router = APIRouter(dependencies=[Depends(JWTBearer())])
 
@@ -42,51 +42,6 @@ async def withdraw_funds(
         raise APIException(detail="User not found", status_code=404)
     check_url = await BalanceController.process_withdrawal(user, Decimal(amount), currency)
     return {"balance": str(check_url)}
-
-
-
-
-# @router.post(
-#     "/balance/deposit",
-#     response_model=UserBalanceOut,
-#     responses={400: {"model": APIExceptionModel}},
-# )
-# async def deposit_balance(
-#     deposit_data: BalanceDepositIn = Body(...),
-#     user_in: AuthUserOut = Depends(get_user),
-# ):
-#     try:
-#         await BalanceController.update_balance(
-#             user_id=user_in.tg_id,
-#             currency=deposit_data.currency,
-#             amount=deposit_data.amount,
-#         )
-#         balance = await BalanceController.get_balance(user_in.tg_id, deposit_data.currency)
-#         return {"currency": deposit_data.currency, "balance": str(balance)}
-#     except Exception as error:
-#         raise HTTPException(f"Deposit failed: {error}", 400)
-
-
-# @router.post(
-#     "/balance/withdraw",
-#     response_model=UserBalanceOut,
-#     responses={400: {"model": APIExceptionModel}},
-# )
-# async def withdraw_balance(
-#     withdraw_data: BalanceWithdrawIn = Body(...),
-#     user_in: AuthUserOut = Depends(get_user),
-# ):
-#     try:
-#         await BalanceController.withdraw_balance(
-#             user_id=user_in.tg_id,
-#             currency=withdraw_data.currency,
-#             amount=withdraw_data.amount,
-#         )
-#         balance = await BalanceController.get_balance(user_in.tg_id, withdraw_data.currency)
-#         return {"currency": withdraw_data.currency, "balance": str(balance)}
-#     except Exception as error:
-#         raise HTTPException(f"Withdraw failed: {error}", 400)
-
 
 @router.get(
     "/checks/get_all_checks",

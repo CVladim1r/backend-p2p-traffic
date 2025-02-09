@@ -3,7 +3,8 @@ from fastapi import APIRouter
 from back.models.enums import TransactionCurrencyType, CategoriesAds, TypeUserAcquisition
 from back.errors import APIExceptionModel
 
-router = APIRouter() # dependencies=[Depends(JWTBearer())]
+
+router = APIRouter()
 
 @router.get(
     "/transaction_currency_types",
@@ -31,4 +32,3 @@ async def get_user_acquisition_type() -> list[str]:
 )
 async def get_categories() -> list[str]:
     return CategoriesAds
-
