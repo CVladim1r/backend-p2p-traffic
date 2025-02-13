@@ -24,13 +24,10 @@ dp = Dispatcher()
 async def command_start_handler(message: Message) -> None:
     tg_id = int(message.from_user.id)
     username = str(message.from_user.username)
-    # referred_user_tg_id = (
-    #     message.text.split(maxsplit=1)[1] if len(message.text.split(maxsplit=1)) > 1 else None
-    # )
+
     reply_text, keyboard = await start_user_get_or_create(
         tg_id=tg_id,
         username=username,
-        # referral_uuid=referred_user_tg_id,
     )
     await message.answer(text=reply_text, reply_markup=keyboard)
 
