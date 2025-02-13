@@ -55,7 +55,7 @@ class UserMainData(BaseModel):
 
 class StartUserIn(BaseModel):
     tg_id: int
-    username: str
+    username: str | None
 
 class StartUserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
