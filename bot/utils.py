@@ -28,11 +28,6 @@ async def success_start_msg(username: str) -> str:
     )
     return msg
 
-
-# async def log_new_user(username, ref_check):
-#     bot_logger.info(f'New user {username=} joined.')
-
-
 async def get_jwt_token(username: str, tg_id: int) -> str:
     connector = aiohttp.TCPConnector(limit_per_host=5)
     async with aiohttp.ClientSession(trust_env=True, connector=connector) as session:
@@ -58,14 +53,6 @@ async def get_jwt_token(username: str, tg_id: int) -> str:
 
         bot_logger.info(f'payload: {payload}')
 
-
-        # async with session.post(auth_url, json=payload, ssl=False) as response:
-        #     response_data = await response.json()
-        #     if response.status != 200:
-        #         bot_logger.error(f"Failed to obtain JWT token: {await response.text()}")
-        #         raise Exception("Failed to obtain JWT token")
-        #     return response_data.get('access_token')
-
         async with session.post(auth_url, json=payload, ssl=False) as response:
             if response.status != 200:
                 response_text = await response.text()
@@ -73,10 +60,6 @@ async def get_jwt_token(username: str, tg_id: int) -> str:
                 raise Exception(f"Failed to obtain JWT token: {response_text}")
             response_data = await response.json()
             return response_data.get('access_token')
-
-
-
-
 
 async def create_user_request(
     session: aiohttp.ClientSession, payload: dict, headers: dict
@@ -88,7 +71,6 @@ async def create_user_request(
             return None
         return await response.json()
 
-
 async def start_user_get_or_create(
     tg_id: int, username: str
 ) -> Tuple[str, InlineKeyboardMarkup | None]:
@@ -99,7 +81,6 @@ async def start_user_get_or_create(
     async with aiohttp.ClientSession(trust_env=True, connector=connector) as session:
         payload = {"tg_id": tg_id, "username": username}
        
-
         response_data = await create_user_request(session, payload, headers)
         if response_data is None:
             bot_logger.error("Create user response_data is None, retrying request.")
@@ -116,6 +97,5 @@ async def start_user_get_or_create(
             bot_logger.error("Failed to create user after token refresh attempt.")
             return reply_text, None
 
-        # await log_new_user(username=username)
         reply_text = await success_start_msg(username)
         return reply_text, keyboard

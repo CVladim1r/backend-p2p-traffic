@@ -1,11 +1,9 @@
 import os
-import logging
 import sys
-
+import logging
 from dotenv import load_dotenv
 
 load_dotenv()
-
 
 def setup_logger(name):
     logger = logging.getLogger(name)
@@ -17,9 +15,5 @@ def setup_logger(name):
         logger.addHandler(handler)
     return logger
 
-
-BOT_TOKEN = os.getenv('BOT_TOKEN')
-BACKEND_API_URL = os.getenv('BACKEND_API_URL')
-PASSWORD= os.getenv('PASSWORD')
-MINIAPP_URL = os.getenv("MINIAPP_URL")
-METRICS_API = os.getenv("BACK_METRICS_API")
+BOT_HELPER_TOKEN = os.getenv("BOT_HELPER_TOKEN")
+USER_HELPER_ID = int(os.getenv("USER_HELPER_ID")) if os.getenv("USER_HELPER_ID") else None
