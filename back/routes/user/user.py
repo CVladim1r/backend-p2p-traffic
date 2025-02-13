@@ -34,7 +34,7 @@ async def create_user(
         raise APIException("User not match", 401)
 
     try:
-        user = await UserController.add_user_if_not_exists(user_data.tg_id, user_data.username, user_data.is_premium)
+        user = await UserController.add_user_if_not_exists(user_data.tg_id, user_data.username)
         return StartUserOut.model_validate(user)
     except Exception as error:
         logging.error(f"Error creating user {user_data.tg_id}, {user_data.username}: {error}")

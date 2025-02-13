@@ -56,7 +56,6 @@ class UserMainData(BaseModel):
 class StartUserIn(BaseModel):
     tg_id: int
     username: str
-    is_premium: bool
 
 class StartUserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -64,13 +63,11 @@ class StartUserOut(BaseModel):
     uuid: UUID
     tg_id: int
     username: str
-    is_premium: Optional[bool] = None
     created_at: datetime
 
 class RefUserIn(BaseModel):
     tg_id: int
     referrer_uuid: UUID
-    is_premium: bool
 
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
@@ -78,7 +75,6 @@ class UserOut(BaseModel):
     uuid: UUID
     tg_id: int
     username: Optional[str] = None
-    is_premium: Optional[bool] = None
     created_at: datetime
 
 class UserOut(BaseModel):

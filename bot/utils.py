@@ -33,7 +33,7 @@ async def success_start_msg(username: str) -> str:
 #     bot_logger.info(f'New user {username=} joined.')
 
 
-async def get_jwt_token(username: str, is_premium: bool, tg_id: int) -> str:
+async def get_jwt_token(username: str, tg_id: int) -> str:
     connector = aiohttp.TCPConnector(limit_per_host=5)
     async with aiohttp.ClientSession(trust_env=True, connector=connector) as session:
         auth_url = BACKEND_URLS.get('auth')
@@ -47,7 +47,6 @@ async def get_jwt_token(username: str, is_premium: bool, tg_id: int) -> str:
                     "allows_write_to_pm": "true",
                     "first_name": "mock_first_name",
                     "id": tg_id,
-                    "is_premium": is_premium,
                     "language_code": "en",
                     "last_name": "mock_last_name",
                     "username": username,
@@ -91,20 +90,20 @@ async def create_user_request(
 
 
 async def start_user_get_or_create(
-    tg_id: int, username: str, is_premium: bool | None
+    tg_id: int, username: str
 ) -> Tuple[str, InlineKeyboardMarkup | None]:
-    token = await get_jwt_token(username=username, is_premium=is_premium, tg_id=tg_id, )
+    token = await get_jwt_token(username=username, tg_id=tg_id)
     headers = {'Authorization': f'Bearer {token}'}
 
     connector = aiohttp.TCPConnector(limit_per_host=5)
     async with aiohttp.ClientSession(trust_env=True, connector=connector) as session:
-        payload = {"tg_id": tg_id, "username": username, "is_premium": is_premium}
+        payload = {"tg_id": tg_id, "username": username}
        
 
         response_data = await create_user_request(session, payload, headers)
         if response_data is None:
             bot_logger.error("Create user response_data is None, retrying request.")
-            token = await get_jwt_token(username=username, is_premium=is_premium, tg_id=tg_id)
+            token = await get_jwt_token(username=username, tg_id=tg_id)
             headers = {'Authorization': f'Bearer {token}'}
             response_data = await create_user_request(session, payload, headers)
 
