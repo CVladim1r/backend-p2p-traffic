@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Dict, Optional
 from uuid import UUID
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class UserMainPageIn(BaseModel):
@@ -12,7 +12,7 @@ class UserMainPageOut(BaseModel):
 
     uuid: UUID
     tg_id: int
-    username: str | None
+    username: str | None = Field(default=None)
     roulette_last_spin: str | None
     deals: int
     rating: float
@@ -27,7 +27,7 @@ class UserMainPageOut(BaseModel):
 class UserData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     tg_id: int
-    username: str | None
+    username: str | None = Field(default=None)
     deals: int
     rating: float
     total_sales: float
@@ -43,7 +43,7 @@ class CreateUserRequest(BaseModel):
 class UserMainData(BaseModel):
     uuid: UUID
     tg_id: int
-    username: str | None
+    username: str | None = Field(default=None)
 
     rating: float
     balance: float
@@ -55,14 +55,14 @@ class UserMainData(BaseModel):
 
 class StartUserIn(BaseModel):
     tg_id: int
-    username: str | None
+    username: str | None = Field(default=None)
 
 class StartUserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     uuid: UUID
     tg_id: int
-    username: str
+    username: str | None = Field(default=None)
     created_at: datetime
 
 class RefUserIn(BaseModel):
@@ -80,6 +80,6 @@ class UserOut(BaseModel):
 class UserOut(BaseModel):
     uuid: UUID
     tg_id: int
-    username: str
+    username: str | None = Field(default=None)
     profile_photo: str
 
