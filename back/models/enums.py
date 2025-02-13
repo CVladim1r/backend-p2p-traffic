@@ -9,8 +9,8 @@ class AdStatus(str, Enum):
 class TransactionType(str, Enum):
     DEPOSIT = "deposit"
     WITHDRAWAL = "withdrawal"
-    FEE = "fee"             # Комиссия
-    REFERRAL = "referral"   # Реферальные
+    FEE = "fee"
+    REFERRAL = "referral"
 
 class TransactionCurrencyType(str, Enum):
     TON = "TON"
