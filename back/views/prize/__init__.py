@@ -1,0 +1,1 @@
+from back.views.prize.prize import *

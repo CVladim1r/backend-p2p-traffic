@@ -6,3 +6,4 @@ from .chats import Chats # noqa
 from .referrals import Referrals # noqa
 from .VIPStatuses import VIPStatuses # noqa
 from .transactions import Transactions # noqa
+from .prize import ActivePrize # noqa
