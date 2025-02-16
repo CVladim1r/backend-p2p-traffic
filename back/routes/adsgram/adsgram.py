@@ -38,7 +38,7 @@ async def spin_roulette(
     prizes = [
         "10%_discount",
         "5%_discount",
-        "ref_bonus_7%",
+        "3%_deposit",
         "lower_commission_7%"
     ]
     selected_prize = random.choice(prizes)

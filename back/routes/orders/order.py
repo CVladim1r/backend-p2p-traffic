@@ -1,11 +1,12 @@
-from uuid import uuid4
 import uuid
+
 from typing import List
 from fastapi import APIRouter, Depends, Query
 
 from back.auth.auth import get_user
 from back.errors import APIException, APIExceptionModel
-from back.models.enums import CategoriesAds
+from back.models.enums import CategoriesAds, DealStatus
+from back.models import Reviews, Deals
 from back.views.auth.user import AuthUserOut
 from back.controllers.user import UserController
 from back.controllers.orders import OrderController
@@ -22,7 +23,9 @@ from back.views.ads import (
     ChatAllOut,
     ChatMessage,
     ChatMessageCreate,
-    PinChatRequest
+    PinChatRequest,
+    ReviewOut,
+    ReviewCreate
 )
 
 
@@ -223,3 +226,67 @@ async def get_all_chats(
         return chats
     except APIException as e:
         raise APIException(status_code=e.status_code, error=str(e.error))
+
+@router.post(
+    "/deals/{deal_uuid}/reviews",
+    response_model=ReviewOut,
+    responses={
+        400: {"model": APIExceptionModel},
+        404: {"model": APIExceptionModel}
+    }
+)
+async def create_review(
+    deal_uuid: uuid.UUID,
+    review_data: ReviewCreate,
+    user_in: AuthUserOut = Depends(get_user)
+):
+    try:
+        deal = await Deals.get(uuid=deal_uuid).prefetch_related(
+            "buyer_id", "seller_id", "ad_uuid"
+        )
+        if deal.status != DealStatus.COMPLETED:
+            raise APIException("Отзывы можно оставлять только для завершенных сделок", 400)
+
+        user = await UserController.get_by_tg_id(user_in.tg_id)
+        if user.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
+            raise APIException("Пользователь не участвовал в сделке", 403)
+
+        if user.uuid == deal.buyer_id.uuid:
+            reviewed_user = deal.seller_id
+        else:
+            reviewed_user = deal.buyer_id
+
+        existing_review = await Reviews.exists(
+            deal_uuid=deal,
+            reviewer_id=user
+        )
+        if existing_review:
+            raise APIException("Вы уже оставили отзыв по этой сделке", 400)
+
+        new_review = await Reviews.create(
+            deal_uuid=deal,
+            reviewer_id=user,
+            reviewed_user_id=reviewed_user,
+            rating=review_data.rating,
+            comment=review_data.comment
+        )
+
+        await new_review.fetch_related(
+            "deal_uuid", 
+            "reviewer_id", 
+            "reviewed_user_id"
+        )
+
+        return ReviewOut(
+            uuid=new_review.uuid,
+            deal_uuid=new_review.deal_uuid.uuid,
+            reviewer_id=new_review.reviewer_id.uuid,
+            reviewed_user_id=new_review.reviewed_user_id.uuid,
+            rating=new_review.rating,
+            comment=new_review.comment,
+            created_at=new_review.created_at.isoformat()
+        )
+    except APIException as e:
+        raise e
+    except Exception as e:
+        raise APIException(str(e), 500)
