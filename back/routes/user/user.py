@@ -1,7 +1,8 @@
 import logging
 
+from typing import Optional
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, Body, Query
 from tortoise.transactions import in_transaction
 from dateutil.relativedelta import relativedelta, MO
@@ -10,8 +11,9 @@ from back.auth.auth import get_user
 from back.models import UserBalance, VIPStatuses
 from back.models.enums import TransactionCurrencyType
 from back.errors import APIException, APIExceptionModel
-from back.views.auth.user import AuthUserOut
-from back.views.user.user import StartUserIn, StartUserOut, UserData, UserMainPageOut
+from back.views.auth import AuthUserOut
+from back.views.user import StartUserIn, StartUserOut, UserData, UserMainPageOut
+from back.views.prize import PrizeOut
 from back.controllers.user import UserController
 from back.controllers.balance import BalanceController
 
@@ -20,7 +22,10 @@ router = APIRouter()
 @router.post(
     "/create_user",
     response_model=StartUserOut,
-    responses={400: {"model": APIExceptionModel}},
+    responses={
+        404: {"model": APIExceptionModel},
+        400: {"model": APIExceptionModel}
+    }
 )
 async def create_user(
     user_data: StartUserIn = Body(...),
@@ -43,7 +48,10 @@ async def create_user(
 @router.get(
     "/main_data",
     response_model=UserMainPageOut,
-    responses={400: {"model": APIExceptionModel}},
+    responses={
+        404: {"model": APIExceptionModel},
+        400: {"model": APIExceptionModel}
+    }
 )
 async def get_user_main_data(
     user_in: AuthUserOut = Depends(get_user),
@@ -88,7 +96,10 @@ async def get_user_main_data(
 @router.get(
     "/get_user_data",
     response_model=UserData,
-    responses={400: {"model": APIExceptionModel}},
+    responses={
+        404: {"model": APIExceptionModel},
+        400: {"model": APIExceptionModel}
+    }
 )
 async def get_user_data(
     user_tg_id: int,
@@ -109,7 +120,10 @@ async def get_user_data(
 
 @router.post(
     "/update_user_photo",
-    responses={400: {"model": APIExceptionModel}},
+    responses={
+        404: {"model": APIExceptionModel},
+        400: {"model": APIExceptionModel}
+    }
 )
 async def update_user_photo(
     user_in: AuthUserOut = Depends(get_user),
@@ -194,3 +208,35 @@ async def update_user_vip(
         await user.save()
 
     return "Done"
+
+@router.get(
+    "/active_prize",
+    response_model=Optional[PrizeOut],
+    responses={
+        404: {"model": APIExceptionModel},
+        400: {"model": APIExceptionModel}
+    }
+)
+async def get_active_prize(
+    user_in: AuthUserOut = Depends(get_user),
+) -> Optional[PrizeOut]:
+    logging.info(f"Getting active prize for tg_id: {user_in.tg_id}")
+
+    user = await UserController.get_user_with_prizes(user_in.tg_id)
+    if not user:
+        raise APIException(f"User with tg_id {user_in.tg_id} not found", 404)
+
+    now = datetime.now(timezone.utc)
+    active_prizes = [
+        prize for prize in user.prizes
+        if prize.expires_at > now
+    ]
+
+    if not active_prizes:
+        return None
+
+    latest_prize = max(active_prizes, key=lambda x: x.expires_at)
+    return PrizeOut(
+        prize_type=latest_prize.prize_type,
+        expires_at=latest_prize.expires_at.isoformat()
+    )

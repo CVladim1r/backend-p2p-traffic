@@ -19,6 +19,10 @@ class UserController(BaseUserController):
         return await cls.model.get_or_none(tg_id=tg_id)
 
     @classmethod
+    async def get_user_with_prizes(cls, tg_id: int) -> Users:
+        return await cls.model.get_or_none(tg_id=tg_id).prefetch_related('prizes')
+
+    @classmethod
     async def list(cls, page: int = 0, limit: int = 100) -> List[T]:
         models = await cls.model.all().limit(limit).offset(page * limit)
         return models
