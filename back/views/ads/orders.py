@@ -9,7 +9,8 @@ from back.models.enums import (
     AdStatus, 
     DealStatus, 
     TypeUserAcquisition,
-    TransactionCurrencyType
+    TransactionCurrencyType,
+    PrizeType
 )
 
 
