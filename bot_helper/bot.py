@@ -1,20 +1,18 @@
 import os
-import sys
 import logging
 import asyncio
 
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List
 from collections import defaultdict
 
 from aiogram import Bot, Dispatcher, F, types
-from aiogram.enums import ParseMode, ContentType
+from aiogram.enums import ContentType
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
-from aiogram.filters import Command, CommandStart
+from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from aiogram.utils.markdown import hbold, hitalic
 
 
 logging.basicConfig(level=logging.INFO)
@@ -77,7 +75,7 @@ def ticket_priority_kb() -> InlineKeyboardMarkup:
 def ticket_actions(ticket_id: int) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.button(text="✍️ Ответить", callback_data=f"reply_{ticket_id}")
-    builder.button(text="📌 Статус", callback_data=f"status_{ticket_id}")
+    # builder.button(text="📌 Статус", callback_data=f"status_{ticket_id}")
     builder.button(text="🚫 Закрыть", callback_data=f"close_{ticket_id}")
     builder.adjust(2)
     return builder.as_markup()
@@ -101,7 +99,7 @@ def tickets_list_kb(tickets: List[int], page: int = 0, items_per_page: int = 5) 
     if end_idx < len(tickets):
         builder.button(text="Вперед ➡️", callback_data=f"page_{page+1}")
     
-    builder.button(text="🔙 Назад", callback_data="main_menu")
+    # builder.button(text="🔙 Назад", callback_data="main_menu")
     builder.adjust(1, 2)
     return builder.as_markup()
 
@@ -144,7 +142,7 @@ async def new_ticket(callback: CallbackQuery, state: FSMContext):
     
     await state.set_state(UserStates.select_category)
     await callback.message.edit_text(
-        "📝 Выберите категорию вопроса:",
+        "Выберите категорию вопроса:",
         reply_markup=category_keyboard()
     )
 
@@ -161,7 +159,7 @@ async def select_category(callback: CallbackQuery, state: FSMContext):
     category = callback.data.split("_")[1]
     await state.update_data(category=category)
     await callback.message.edit_text(
-        "🚨 Выберите приоритет:",
+        "Выберите приоритет:",
         reply_markup=ticket_priority_kb()
     )
     await state.set_state(UserStates.create_ticket)
@@ -221,7 +219,7 @@ async def create_ticket_handler(message: Message, state: FSMContext):
     db.counters['ticket_id'] += 1
     
     await message.answer(
-        f"✅ Запрос #{ticket_id} создан!\n"
+        f"✅ Запрос создан!\n"
         "Ожидайте ответа нашего специалиста.",
         reply_markup=main_menu(message.from_user.id)
     )
@@ -257,7 +255,7 @@ async def reply_ticket(callback: CallbackQuery, state: FSMContext):
     await state.update_data(ticket_id=ticket_id)
     await state.set_state(AdminStates.answer_ticket)
     await callback.message.answer(
-        f"💬 Введите ответ для запроса #{ticket_id}:")
+        f"Введите ответ для запроса #{ticket_id}:")
 
 @dp.message(AdminStates.answer_ticket)
 async def process_admin_reply(message: Message, state: FSMContext):
@@ -462,9 +460,9 @@ async def show_statistics(callback: CallbackQuery):
     
     await callback.message.edit_text(
         text,
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🔙 Назад", callback_data="admin_panel")]
-        ])
+        # reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        #     [InlineKeyboardButton(text="🔙 Назад", callback_data="admin_panel")]
+        # ])
     )
 
 @dp.callback_query(F.data == "all_tickets")

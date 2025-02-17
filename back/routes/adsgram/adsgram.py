@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, Query
 
 from back.controllers.user import UserController
 from back.models import Users, ActivePrize
+from back.models.enums import PrizeType
 from back.errors import APIExceptionModel, APIException
 from back.views.prize import PrizeOut
 
@@ -35,12 +36,7 @@ async def spin_roulette(
     user.roulette_last_spin = current_time
     await user.save()
 
-    prizes = [
-        "10%_discount",
-        "5%_discount",
-        "ref_bonus_7%",
-        "lower_commission_7%"
-    ]
+    prizes = list(PrizeType)
     selected_prize = random.choice(prizes)
 
     expires_at = current_time + timedelta(days=1)

@@ -53,3 +53,9 @@ class TypeUserAcquisition(str, Enum):
     BOT_NEWSLETTER = "Рассылка в боте"
     POST = "Пост в каналах"
     MOTIVE = "Мотив"
+
+class PrizeType(str, Enum):
+    DISCOUNT_5 = "5%_discount" # скидка на размещение (платное) работает 1 раз
+    DEPOSIT_3 = "3%_deposit" # + 3% к депозиту (до 1000$)
+    LOWER_COMMISSION_20 = "lower_commission_20%" # -20% на вывод средств 
+    DISCOUNT_10 = "10%_discount" # скидка на размещение (платное) работает 1 раз

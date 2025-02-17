@@ -1,15 +1,16 @@
-from typing import Optional
+from typing import Optional, Annotated
 from decimal import Decimal
 from datetime import datetime
 from pydantic.types import List
-from pydantic import BaseModel, ConfigDict, UUID4
+from pydantic import BaseModel, UUID4, Field
 
 from back.models.enums import (
     CategoriesAds, 
     AdStatus, 
     DealStatus, 
     TypeUserAcquisition,
-    TransactionCurrencyType
+    TransactionCurrencyType,
+    PrizeType
 )
 
 
@@ -192,3 +193,16 @@ class DealOut(BaseModel):
 
     class Config:
         orm_mode = True
+
+class ReviewCreate(BaseModel):
+    rating: Annotated[int, Field(ge=1, le=5)]
+    comment: str | None = Field(None, max_length=500)
+
+class ReviewOut(BaseModel):
+    uuid: UUID4
+    deal_uuid: UUID4
+    reviewer_id: UUID4
+    reviewed_user_id: UUID4
+    rating: int
+    comment: str | None
+    created_at: str
