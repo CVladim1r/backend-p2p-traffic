@@ -16,6 +16,7 @@ from back.views.ads import (
     AdOutOne,
     AdCreateOut,
     DealCreate,
+    DealOut,
     DealsOut,
     DealOutCOMPLETE,
     ChatOut,
@@ -122,18 +123,18 @@ async def get_user_deals(
     except Exception as e:
         raise APIException(status_code=400, error=str(e))
 
-# @router.get(
-#     "/deals/{deal_uuid}", 
-#     response_model=DealsOut
-# )
-# async def get_deal(
-#     deal_uuid: uuid.UUID, 
-# ):
-#     try:
-#         deal = await OrderController.get_deal(deal_uuid=deal_uuid)
-#         return deal
-#     except Exception as e:
-#         raise HTTPException(status_code=404, detail=str(e))
+@router.get(
+    "/deals/{deal_uuid}", 
+    response_model=DealOut
+)
+async def get_deal(
+    deal_uuid: uuid.UUID, 
+):
+    try:
+        deal = await OrderController.get_deal(deal_uuid=deal_uuid)
+        return deal
+    except Exception as e:
+        raise APIException(status_code=404, error=str(e))
     
 @router.post(
     "/deals/{deal_uuid}/confirm", 

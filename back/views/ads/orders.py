@@ -1,3 +1,4 @@
+from uuid import UUID
 from typing import Optional, Annotated
 from decimal import Decimal
 from datetime import datetime
@@ -180,16 +181,18 @@ class DealOutCOMPLETE(BaseModel):
 
 class DealOut(BaseModel):
     uuid: UUID4
-    ad_uuid: UUID4
-    buyer_id: int
-    seller_id: int
+
     status: DealStatus
     price: Decimal 
     currency: TransactionCurrencyType
     is_frozen: bool
+    buyer_confirms: bool
+    seller_confirms: bool
+
     support_request: bool
-    created_at: datetime
-    updated_at: datetime
+
+    # created_at: datetime
+    # updated_at: datetime
 
     class Config:
         orm_mode = True

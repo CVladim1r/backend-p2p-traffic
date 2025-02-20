@@ -151,15 +151,21 @@ class OrderController(BaseUserController):
 
     @staticmethod
     async def create_deal(deal_data: DealCreate, user_id: int) -> Deals: 
-        user = await UserController.get_by_tg_id(user_id)
+        
+        try:
+            user = await UserController.get_by_tg_id(tg_id=user_id)
+        except DoesNotExist:
+            raise APIException(error="User does not exist", status_code=400)
 
         try:
             ad = await Ads.get(uuid=deal_data.ad_uuid).prefetch_related("user_id")
         except DoesNotExist:
             raise APIException(error="Ad not found", status_code=404)
-        
-        if ad.user_id == user.tg_id:
-            raise APIException(error="You cannot buy your own ad", status_code=400)    
+        logging.info(f"user: {user}")
+
+        # logging.info(f"usert tg id: {user.tg_id}")
+        # if ad.user_id == user.tg_id:
+        #     raise APIException(error="You cannot buy your own ad", status_code=400)    
 
         async with in_transaction():
             deal = await Deals.create(
@@ -224,30 +230,30 @@ class OrderController(BaseUserController):
         return result
     
     @staticmethod
-    async def get_deal(deal_uuid: UUID, status: DealStatus = None) -> List[DealOut]:
-        query = Deals.filter(uuid=deal_uuid)
+    async def get_deal(deal_uuid: UUID) -> DealOut:
+        deal_list = await Deals.filter(uuid=deal_uuid)
         
-        if status:
-            query = query.filter(status=status)
+        if not deal_list:
+            raise ValueError(f"Deal with UUID {deal_uuid} not found.")  # Raise an error or handle as needed
 
-        deals = await query
-        result = []
-        for deal in deals:
-            result.append(DealOut(
-                uuid=deal.uuid,
-                ad_uuid=deal.ad_uuid.uuid,
-                buyer_id=deal.buyer_id.uuid,
-                seller_id=deal.seller_id.uuid,
-                status=deal.status,
-                price=deal.price,
-                currency=deal.currency,
-                is_frozen=deal.is_frozen,
-                support_request=deal.support_request,
-                created_at=deal.created_at,
-                updated_at=deal.updated_at
-            ))
+        deal = deal_list[0]
+        
+        deal_val = DealOut(
+            uuid=deal.uuid,
 
-        return result
+            status=deal.status,
+            price=deal.price,
+            currency=deal.currency,
+            is_frozen=deal.is_frozen,
+            buyer_confirms=deal.buyer_confirms,
+            seller_confirms=deal.seller_confirms,
+            support_request=deal.support_request,
+            # created_at=deal.created_at.isoformat(),
+            # updated_at=deal.updated_at.isoformat(),
+        )
+
+        return deal_val
+
 
     @staticmethod
     async def confirm_deal(deal_uuid: UUID, user_id: int) -> Deals:
