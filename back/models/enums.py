@@ -15,8 +15,6 @@ class TransactionType(str, Enum):
 class TransactionCurrencyType(str, Enum):
     TON = "TON"
     USDT = "USDT"
-    # BTC = "BTC"
-    # ETH = "ETH"
 
 class TransactionStatus(str, Enum):
     PENDING = "Pending"

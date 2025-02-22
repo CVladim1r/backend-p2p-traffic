@@ -179,7 +179,7 @@ class OrderController(BaseUserController):
             raise APIException(error="Ad not found", status_code=404)
         logging.info(f"user: {user}")
 
-        price_plus_commision=ad.price*0.1+ad.price
+        price_plus_commision=ad.price*Decimal("0.1")+ad.price
 
         async with in_transaction():
             deal = await Deals.create(
@@ -352,9 +352,10 @@ class OrderController(BaseUserController):
                     buyer = deal.buyer_id
                     referral = await Referrals.get_or_none(referred=buyer)
                     if referral:
+                        ad = deal.ad_uuid
                         referrer = referral.referrer
-                        commission = deal.price - ad.price  # 10% комиссия
-                        referral_bonus = commission * Decimal('0.4')  # 40% от комиссии
+                        commission = deal.price - ad.price
+                        referral_bonus = commission * Decimal('0.4')
                         
                         await BalanceController.update_balance(
                             user_id=referrer.tg_id,

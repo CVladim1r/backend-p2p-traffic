@@ -47,6 +47,8 @@ class Deals(models.Model):
     
     buyer_confirms = fields.BooleanField(default=False)
     seller_confirms = fields.BooleanField(default=False)
+    buyer_review = fields.BooleanField(default=False)
+    seller_review = fields.BooleanField(default=False)
 
     is_frozen = fields.BooleanField(default=False)
     support_request = fields.BooleanField(default=False)
@@ -55,3 +57,7 @@ class Deals(models.Model):
 
     class Meta:
         table = "deals"
+        indexes = [
+            ("status", "buyer_id", "created_at"),
+            ("status", "seller_id", "created_at")
+        ]

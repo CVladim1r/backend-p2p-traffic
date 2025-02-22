@@ -209,3 +209,6 @@ class ReviewOut(BaseModel):
     rating: int
     comment: str | None
     created_at: str
+
+    seller_review: bool
+    buyer_review: bool

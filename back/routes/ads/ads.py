@@ -275,6 +275,22 @@ async def create_review(
             comment=review_data.comment
         )
 
+        if user.uuid == deal.buyer_id.uuid:
+            if deal.buyer_review:
+                raise APIException(
+                    error="Buyer already review the deal",
+                    status_code=400
+                )
+            deal.buyer_review = True
+        else:
+            if deal.seller_review:
+                raise APIException(
+                    error="Seller already review the deal",
+                    status_code=400
+                )
+            deal.seller_review = True
+
+
         await new_review.fetch_related(
             "deal_uuid", 
             "reviewer_id", 
@@ -288,7 +304,9 @@ async def create_review(
             reviewed_user_id=new_review.reviewed_user_id.uuid,
             rating=new_review.rating,
             comment=new_review.comment,
-            created_at=new_review.created_at.isoformat()
+            created_at=new_review.created_at.isoformat(),
+            seller_review=new_review.deal_uuid.seller_review,
+            buyer_review=new_review.deal_uuid.buyer_review,
         )
     except APIException as e:
         raise e
