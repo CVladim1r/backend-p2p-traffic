@@ -49,13 +49,12 @@ class CategoriesAds(str, Enum):
     OTHER = "Other"    
 
 class TypeUserAcquisition(str, Enum):
-    # NATIVE = "Нативный"
     BOT_NEWSLETTER = "Рассылка в боте"
     POST = "Пост в каналах"
     MOTIVE = "Мотив"
 
 class PrizeType(str, Enum):
-    DISCOUNT_5 = "5%_discount" # скидка на размещение (платное) работает 1 раз
-    DEPOSIT_3 = "3%_deposit" # + 3% к депозиту (до 1000$)
-    LOWER_COMMISSION_20 = "lower_commission_20%" # -20% на вывод средств 
-    DISCOUNT_10 = "10%_discount" # скидка на размещение (платное) работает 1 раз
+    DISCOUNT_3 = "3%_discount"
+    DISCOUNT_5 = "5%_discount"
+    INCREASED_REFFERRAL_BONUS_7 = "7%_increased_referral_bonus"
+    DEPOSIT_03 = "03_deposit"
