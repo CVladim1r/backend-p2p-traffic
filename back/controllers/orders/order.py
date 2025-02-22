@@ -355,7 +355,7 @@ class OrderController(BaseUserController):
                         commission = deal.price - ad.price
                         referral_bonus = commission * Decimal('0.4')
                         referrer_user = referral.referrer
-                        logging.info(f"referrer tg_id: {referrer_user.tg_id}")
+                        logging.info(f"referrer tg_id: {referrer_user.tg_id} deal.currency:{deal.currency} referral_bonus: {referral_bonus}")
                         await BalanceController.update_balance(
                             user_id=referrer_user.tg_id,
                             currency=deal.currency,
