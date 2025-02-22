@@ -349,22 +349,21 @@ class OrderController(BaseUserController):
                         amount=-deal.price
                     )
 
-                    referral = await Referrals.get_or_none(referred=deal.buyer_id)
+                    referral = await Referrals.get_or_none(referred=deal.buyer_id).prefetch_related("referrer")
                     if referral:
                         ad = deal.ad_uuid
                         commission = deal.price - ad.price
                         referral_bonus = commission * Decimal('0.4')
-                        
-                        logging.info(f"referral.referrer.tg_id: {referral.referrer.tg_id}")
-
+                        referrer_user = referral.referrer
+                        logging.info(f"referrer tg_id: {referrer_user.tg_id}")
                         await BalanceController.update_balance(
-                            user_id=referral.referrer.tg_id,
+                            user_id=referrer_user.tg_id,
                             currency=deal.currency,
                             amount=referral_bonus
                         )
                         
                         await Transactions.create(
-                            user=referral.referrer,
+                            user=referrer_user,
                             amount=referral_bonus,
                             currency=deal.currency,
                             transaction_type=TransactionType.REFERRAL,
