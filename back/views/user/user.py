@@ -56,6 +56,7 @@ class UserMainData(BaseModel):
 class StartUserIn(BaseModel):
     tg_id: int
     username: str | None = Field(default=None)
+    referrer_id: Optional[int] = None
 
 class StartUserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)

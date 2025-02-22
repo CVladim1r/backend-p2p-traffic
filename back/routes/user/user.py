@@ -8,7 +8,7 @@ from tortoise.transactions import in_transaction
 from dateutil.relativedelta import relativedelta, MO
 
 from back.auth.auth import get_user
-from back.models import UserBalance, VIPStatuses
+from back.models import UserBalance, VIPStatuses, Referrals
 from back.models.enums import TransactionCurrencyType
 from back.errors import APIException, APIExceptionModel
 from back.views.auth import AuthUserOut
@@ -40,6 +40,15 @@ async def create_user(
 
     try:
         user = await UserController.add_user_if_not_exists(user_data.tg_id, user_data.username)
+
+        if user_data.referrer_id and user_data.referrer_id != user_data.tg_id:
+            referrer = await UserController.get_user_by_tg_id(user_data.referrer_id)
+            if referrer:
+                await Referrals.create(
+                    referrer_id=referrer.uuid,
+                    referred_id=user.uuid
+                )
+
         return StartUserOut.model_validate(user)
     except Exception as error:
         logging.error(f"Error creating user {user_data.tg_id}, {user_data.username}: {error}")

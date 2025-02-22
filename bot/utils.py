@@ -72,14 +72,19 @@ async def create_user_request(
         return await response.json()
 
 async def start_user_get_or_create(
-    tg_id: int, username: str
+    tg_id: int, username: str, referrer_id: Optional[int] = None
 ) -> Tuple[str, InlineKeyboardMarkup | None]:
     token = await get_jwt_token(username=username, tg_id=tg_id)
+
     headers = {'Authorization': f'Bearer {token}'}
 
     connector = aiohttp.TCPConnector(limit_per_host=5)
     async with aiohttp.ClientSession(trust_env=True, connector=connector) as session:
-        payload = {"tg_id": tg_id, "username": username}
+        payload = {
+            "tg_id": tg_id, 
+            "username": username,
+            "referrer_id": referrer_id
+            }
        
         response_data = await create_user_request(session, payload, headers)
         if response_data is None:
