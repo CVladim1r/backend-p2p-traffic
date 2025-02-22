@@ -1,7 +1,7 @@
 
 from typing import List, Optional
 from decimal import Decimal
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class ReferralUserStats(BaseModel):
     uuid: str
@@ -13,6 +13,7 @@ class ReferralUserStats(BaseModel):
     total_buys_amount: Decimal
     completed_sales_count: int
     total_sales_amount: Decimal
+    total_earned: Decimal = Field(..., description="Сумма заработанная от реферала")
 
 class ReferralStatsOut(BaseModel):
     referrals: List[ReferralUserStats]

@@ -13,9 +13,23 @@ from back.controllers.base import BaseUserController
 from back.controllers.user import UserController
 from back.controllers.balance import BalanceController
 from back.errors import APIException
-from back.models import Ads, Deals, Chats, Users, UserBalance
-from back.models.enums import AdStatus, DealStatus, TransactionCurrencyType
 from back.utils.cryptobot import crypto_service
+from back.models import (
+    Ads,
+    Deals,
+    Chats,
+    Users,
+    Referrals,
+    UserBalance,
+    Transactions,
+)
+from back.models.enums import (
+    AdStatus,
+    DealStatus,
+    TransactionCurrencyType,
+    TransactionType,
+    TransactionStatus,
+)
 from back.views.ads import (
     AdOut, 
     AdCreate, 
@@ -334,6 +348,28 @@ class OrderController(BaseUserController):
                         currency=deal.currency,
                         amount=-deal.price
                     )
+
+                    buyer = deal.buyer_id
+                    referral = await Referrals.get_or_none(referred=buyer)
+                    if referral:
+                        referrer = referral.referrer
+                        commission = deal.price - ad.price  # 10% комиссия
+                        referral_bonus = commission * Decimal('0.4')  # 40% от комиссии
+                        
+                        await BalanceController.update_balance(
+                            user_id=referrer.tg_id,
+                            currency=deal.currency,
+                            amount=referral_bonus
+                        )
+                        
+                        await Transactions.create(
+                            user=referrer,
+                            amount=referral_bonus,
+                            currency=deal.currency,
+                            transaction_type=TransactionType.REFERRAL,
+                            status=TransactionStatus.SUCCESSFUL,
+                            deal=deal
+                        )
 
                     deal.status = DealStatus.COMPLETED
                     await deal.save()

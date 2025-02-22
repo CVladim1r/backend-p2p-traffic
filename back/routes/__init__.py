@@ -3,8 +3,8 @@ from fastapi import APIRouter
 from .auth import router as auth_router
 from .metrics import router as metrics_router
 from .user import router as user_router
-from .other import router as other_router
-from .orders import router as orders_router
+from .additional import router as other_router
+from .ads import router as orders_router
 from .balance import router as balance_router
 from .adsgram import router as adsgram_router
 from .referrals import router as referrals_router

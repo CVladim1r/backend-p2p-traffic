@@ -3,8 +3,8 @@ from fastapi import APIRouter
 from back.models.enums import TransactionCurrencyType, CategoriesAds, TypeUserAcquisition
 from back.errors import APIExceptionModel
 
-
 router = APIRouter()
+
 
 @router.get(
     "/transaction_currency_types",

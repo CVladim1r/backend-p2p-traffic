@@ -30,8 +30,8 @@ from back.views.ads import (
     ReviewCreate
 )
 
-
 router = APIRouter()
+
 
 @router.post(
     "/new_ad", 
