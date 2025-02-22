@@ -110,12 +110,14 @@ class OrderController(BaseUserController):
         for ad in ads:
             user = ad.user_id
 
+            price_plus_commision=ad.price* Decimal("0.1") + ad.price
+
             ad_out = AdOut(
                 uuid=ad.uuid,
                 category=ad.category,
                 title=ad.title,
                 description=ad.description,
-                price=ad.price,
+                price=price_plus_commision,
                 guaranteed_traffic=ad.guaranteed_traffic,
                 minimum_traffic=ad.minimum_traffic,
                 maximum_traffic=ad.maximum_traffic,
@@ -163,16 +165,14 @@ class OrderController(BaseUserController):
             raise APIException(error="Ad not found", status_code=404)
         logging.info(f"user: {user}")
 
-        # logging.info(f"usert tg id: {user.tg_id}")
-        # if ad.user_id == user.tg_id:
-        #     raise APIException(error="You cannot buy your own ad", status_code=400)    
+        price_plus_commision=ad.price*0.1+ad.price
 
         async with in_transaction():
             deal = await Deals.create(
                 ad_uuid=ad,
                 buyer_id=user,
                 seller_id=ad.user_id,
-                price=ad.price,
+                price=price_plus_commision,
                 status=DealStatus.PENDING,
                 currency=ad.currency_type
             )
@@ -182,7 +182,7 @@ class OrderController(BaseUserController):
                 "sender_name": "admin",
                 "sender_tg_id": "0",
                 "sender_uuid": "3f048ec2-0e18-4d53-8556-21aed104fa2f",
-                "text": "Вы успешно разместили ордер. Выполните условия и дождитесь подтверждения обеих сторон. В случае спорной ситуации открывайте спор. Мы поможем Вам разобраться в ситуации.",
+                "text": "Вы успешно разместили ордер. Выполните условия и дождитесь подтверждения обеих сторон. В случае возниконовения спорной ситуации вы можете мы поможем Вам разобраться в ситуации.",
                 "timestamp": datetime.utcnow().isoformat()
             }
         chat.messages.append(new_message)
