@@ -1,6 +1,7 @@
 import uuid
 
 from typing import List
+from decimal import Decimal
 from fastapi import APIRouter, Depends, Query
 
 from back.auth.auth import get_user
@@ -65,6 +66,8 @@ async def get_ad(
     try:
         ad = await OrderController.get_ad(ad_uuid=ad_uuid)
 
+        price_plus_commision=ad.price* Decimal("0.1") + ad.price
+
         user = ad.user_id
         return AdOutOne(
             uuid=ad.uuid,
@@ -72,7 +75,7 @@ async def get_ad(
             ad_type=ad.type_ads,
             title=ad.title,
             description=ad.description,
-            price=ad.price,
+            price=round(price_plus_commision,3),
             guaranteed_traffic=ad.guaranteed_traffic,
             minimum_traffic=ad.minimum_traffic,
             maximum_traffic=ad.maximum_traffic,

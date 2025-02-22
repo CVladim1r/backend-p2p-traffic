@@ -117,7 +117,7 @@ class OrderController(BaseUserController):
                 category=ad.category,
                 title=ad.title,
                 description=ad.description,
-                price=price_plus_commision,
+                price=round(price_plus_commision, 3),
                 guaranteed_traffic=ad.guaranteed_traffic,
                 minimum_traffic=ad.minimum_traffic,
                 maximum_traffic=ad.maximum_traffic,
@@ -172,7 +172,7 @@ class OrderController(BaseUserController):
                 ad_uuid=ad,
                 buyer_id=user,
                 seller_id=ad.user_id,
-                price=price_plus_commision,
+                price=round(price_plus_commision, 3),
                 status=DealStatus.PENDING,
                 currency=ad.currency_type
             )
