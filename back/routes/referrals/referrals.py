@@ -52,6 +52,17 @@ async def get_referrals_stats(
                 deal_count=Count('uuid')
             ).values('total_amount', 'deal_count')
 
+            # deals_as_buyer = await Deals.filter(
+            #     buyer_id=referred_user.id,
+            #     status=DealStatus.COMPLETED
+            # ).prefetch_related("ad_uuid")
+            
+            total_earned = Decimal(0)
+            # for deal in deals_as_buyer:
+            #     if deal.price and deal.ad_uuid.price:
+            #         commission = deal.price - deal.ad_uuid.price
+            #         total_earned += commission * Decimal('0.4')
+
 
             # deals_as_buyer = await Deals.filter(
             #     buyer=referred_user,
@@ -75,6 +86,9 @@ async def get_referrals_stats(
 
             # stats_data = deals_stats[0] if deals_stats else {}
 
+            buy_total = buys_stats[0]['total_amount'] if buys_stats and buys_stats[0]['total_amount'] else Decimal(0)
+            sale_total = sales_stats[0]['total_amount'] if sales_stats and sales_stats[0]['total_amount'] else Decimal(0)
+
 
             stats.append(ReferralUserStats(
                 uuid=str(referred_user.uuid),
@@ -83,14 +97,14 @@ async def get_referrals_stats(
                 rating=float(referred_user.rating) if referred_user.rating else None,
                 is_vip=referred_user.is_vip,
                 completed_buys_count=buys_stats[0]['deal_count'] if buys_stats else 0,
-                total_buys_amount=buys_stats[0]['total_amount'] if buys_stats else Decimal(0),
+                total_buys_amount=buy_total,
                 completed_sales_count=sales_stats[0]['deal_count'] if sales_stats else 0,
-                total_sales_amount=sales_stats[0]['total_amount'] if sales_stats else Decimal(0),
-                # total_earned=total_earned
+                total_sales_amount=sale_total,
+                total_earned=total_earned
             ))
 
         return ReferralStatsOut(referrals=stats)
     
     except Exception as error:
-        logging.error(f"Error getting referrals: {error}")
+        logging.error(f"Error getting referrals: {error}", exc_info=True)
         raise APIException("Failed to get referral stats", 500)
