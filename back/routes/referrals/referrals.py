@@ -37,7 +37,7 @@ async def get_referrals_stats(
             referred_user = ref.referred
             
             buys_stats = await Deals.filter(
-                buyer=referred_user,
+                buyer=referred_user.uuid,
                 status=DealStatus.COMPLETED
             ).annotate(
                 total_amount=Sum('price'),
@@ -45,7 +45,7 @@ async def get_referrals_stats(
             ).values('total_amount', 'deal_count')
 
             sales_stats = await Deals.filter(
-                seller=referred_user,
+                seller=referred_user.uuid,
                 status=DealStatus.COMPLETED
             ).annotate(
                 total_amount=Sum('price'),
