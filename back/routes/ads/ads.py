@@ -307,6 +307,8 @@ async def create_review(
             created_at=new_review.created_at.isoformat(),
             seller_review=new_review.deal_uuid.seller_review,
             buyer_review=new_review.deal_uuid.buyer_review,
+            # buyer_review=deal.
+            # seller_review=deal.seller_review
         )
     except APIException as e:
         raise e

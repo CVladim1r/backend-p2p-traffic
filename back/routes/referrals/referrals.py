@@ -53,15 +53,15 @@ async def get_referrals_stats(
             ).values('total_amount', 'deal_count')
 
 
-            deals_as_buyer = await Deals.filter(
-                buyer=referred_user,
-                status=DealStatus.COMPLETED
-            ).prefetch_related("ad_uuid")
+            # deals_as_buyer = await Deals.filter(
+            #     buyer=referred_user,
+            #     status=DealStatus.COMPLETED
+            # ).prefetch_related("ad_uuid")
             
-            total_earned = Decimal(0)
-            for deal in deals_as_buyer:
-                commission = deal.price - deal.ad_uuid.price
-                total_earned += commission * Decimal('0.4')
+            # total_earned = Decimal(0)
+            # for deal in deals_as_buyer:
+            #     commission = deal.price - deal.ad_uuid.price
+            #     total_earned += commission * Decimal('0.4')
 
             # deals_stats = await Deals.filter(
             #     Q(buyer=referred_user) | Q(seller=referred_user),
@@ -86,7 +86,7 @@ async def get_referrals_stats(
                 total_buys_amount=buys_stats[0]['total_amount'] if buys_stats else Decimal(0),
                 completed_sales_count=sales_stats[0]['deal_count'] if sales_stats else 0,
                 total_sales_amount=sales_stats[0]['total_amount'] if sales_stats else Decimal(0),
-                total_earned=total_earned
+                # total_earned=total_earned
             ))
 
         return ReferralStatsOut(referrals=stats)

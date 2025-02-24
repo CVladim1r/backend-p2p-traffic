@@ -181,13 +181,17 @@ class DealOutCOMPLETE(BaseModel):
 
 class DealOut(BaseModel):
     uuid: UUID4
-
+    buyer_id: UUID4
+    seller_id: UUID4
     status: DealStatus
     price: Decimal 
     currency: TransactionCurrencyType
     is_frozen: bool
     buyer_confirms: bool
     seller_confirms: bool
+
+    buyer_review: bool
+    seller_review: bool
 
     support_request: bool
 

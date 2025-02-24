@@ -26,9 +26,9 @@ from back.models import (
 from back.models.enums import (
     AdStatus,
     DealStatus,
-    TransactionCurrencyType,
     TransactionType,
     TransactionStatus,
+    TransactionCurrencyType,
 )
 from back.views.ads import (
     AdOut, 
@@ -37,10 +37,10 @@ from back.views.ads import (
     DealsOut,
     DealCreate,
     DealOutCOMPLETE,
-    ChatMessage,
-    ChatAllOut,
-    ChatMessageCreate,
     ChatOut,
+    ChatAllOut,
+    ChatMessage,
+    ChatMessageCreate,
 )
 
 class OrderController(BaseUserController):
@@ -245,16 +245,17 @@ class OrderController(BaseUserController):
     
     @staticmethod
     async def get_deal(deal_uuid: UUID) -> DealOut:
-        deal_list = await Deals.filter(uuid=deal_uuid)
+        deal_list = await Deals.filter(uuid=deal_uuid).prefetch_related("ad_uuid", "buyer_id", "seller_id")
         
         if not deal_list:
             raise ValueError(f"Deal with UUID {deal_uuid} not found.")  # Raise an error or handle as needed
 
         deal = deal_list[0]
         
+
+        
         deal_val = DealOut(
             uuid=deal.uuid,
-
             status=deal.status,
             price=deal.price,
             currency=deal.currency,
@@ -262,6 +263,10 @@ class OrderController(BaseUserController):
             buyer_confirms=deal.buyer_confirms,
             seller_confirms=deal.seller_confirms,
             support_request=deal.support_request,
+            buyer_review=deal.buyer_review,
+            seller_review=deal.seller_review,
+            buyer_id=deal.buyer_id.uuid,
+            seller_id=deal.seller_id.uuid,
             # created_at=deal.created_at.isoformat(),
             # updated_at=deal.updated_at.isoformat(),
         )
@@ -368,7 +373,6 @@ class OrderController(BaseUserController):
                             currency=deal.currency,
                             transaction_type=TransactionType.REFERRAL,
                             status=TransactionStatus.SUCCESSFUL,
-                            deal=deal
                         )
 
                     deal.status = DealStatus.COMPLETED
