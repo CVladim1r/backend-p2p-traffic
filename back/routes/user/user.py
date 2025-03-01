@@ -13,7 +13,7 @@ from back.models.enums import TransactionCurrencyType
 from back.errors import APIException, APIExceptionModel
 from back.views.auth import AuthUserOut
 from back.views.user import StartUserIn, StartUserOut, UserData, UserMainPageOut
-from back.views.prize import PrizeOut
+from back.views.prize import PrizeOutAddUUID
 from back.controllers.user import UserController
 from back.controllers.balance import BalanceController
 
@@ -224,7 +224,7 @@ async def update_user_vip(
 
 @router.get(
     "/active_prize",
-    response_model=Optional[PrizeOut],
+    response_model=Optional[PrizeOutAddUUID],
     responses={
         404: {"model": APIExceptionModel},
         400: {"model": APIExceptionModel}
@@ -232,7 +232,7 @@ async def update_user_vip(
 )
 async def get_active_prize(
     user_in: AuthUserOut = Depends(get_user),
-) -> Optional[PrizeOut]:
+) -> Optional[PrizeOutAddUUID]:
     logging.info(f"Getting active prize for tg_id: {user_in.tg_id}")
 
     user = await UserController.get_user_with_prizes(user_in.tg_id)
@@ -249,7 +249,8 @@ async def get_active_prize(
         return None
 
     latest_prize = max(active_prizes, key=lambda x: x.expires_at)
-    return PrizeOut(
+    return PrizeOutAddUUID(
+        prize_uuid=latest_prize.uuid,
         prize_type=latest_prize.prize_type,
         expires_at=latest_prize.expires_at.isoformat()
     )

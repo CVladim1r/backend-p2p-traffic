@@ -6,14 +6,14 @@ from back.views.auth import AuthUserOut
 from back.auth.auth import get_user
 from back.models import ActivePrize
 from back.models.enums import PrizeType
-from back.views.prize import PrizeOut
+from back.views.prize import PrizeOutAddUUID
 
 
 router = APIRouter()
 
 @router.get(
     "/active_bonuses", 
-    response_model=List[PrizeOut]
+    response_model=List[PrizeOutAddUUID]
 )
 async def get_active_bonuses(
     user_in: AuthUserOut = Depends(get_user),
@@ -29,7 +29,8 @@ async def get_active_bonuses(
     active_prizes = await query.all()
     
     return [
-        PrizeOut(
+        PrizeOutAddUUID(
+            prize_uuid=prize.uuid,
             prize_type=prize.prize_type,
             expires_at=prize.expires_at.isoformat()
         ) for prize in active_prizes
