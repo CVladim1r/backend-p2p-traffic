@@ -51,7 +51,8 @@ async def create_user(
                     )
                 else:
                     await Referrals.create(referrer=referrer, referred=user)
-
+            else:
+                logging.warning(f"Referrer {user_data.referrer_id} not found")
         return StartUserOut.model_validate(user)
     except Exception as error:
         logging.error(f"Error creating user {user_data.tg_id}, {user_data.username}: {error}")

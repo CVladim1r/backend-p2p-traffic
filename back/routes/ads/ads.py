@@ -1,12 +1,12 @@
 import uuid
 
-from typing import List
+from typing import List, Optional
 from decimal import Decimal
 from fastapi import APIRouter, Depends, Query
 
 from back.auth.auth import get_user
 from back.errors import APIException, APIExceptionModel
-from back.models.enums import CategoriesAds, DealStatus
+from back.models.enums import CategoriesAds, DealStatus, PrizeType
 from back.models import Reviews, Deals
 from back.views.auth.user import AuthUserOut
 from back.controllers.user import UserController
@@ -146,11 +146,13 @@ async def get_deal(
 )
 async def confirm_deal(
     deal_uuid: uuid.UUID,
-    user: AuthUserOut = Depends(get_user)
+    user: AuthUserOut = Depends(get_user),
+    use_bonus: Optional[PrizeType] = Query(None, description="Тип бонуса для использования")
 ):
     deal = await OrderController.confirm_deal(
         deal_uuid=deal_uuid,
-        user_id=user.tg_id
+        user_id=user.tg_id,
+        use_bonus=use_bonus
     )
     return deal
 

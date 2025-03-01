@@ -1,9 +1,9 @@
 import logging
 
 from uuid import UUID
-from typing import List
+from typing import List, Optional
 from decimal import Decimal
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from tortoise.expressions import Q
 from tortoise.exceptions import DoesNotExist
@@ -21,10 +21,12 @@ from back.models import (
     Users,
     Referrals,
     UserBalance,
+    ActivePrize,
     Transactions,
 )
 from back.models.enums import (
     AdStatus,
+    PrizeType,
     DealStatus,
     TransactionType,
     TransactionStatus,
@@ -42,6 +44,38 @@ from back.views.ads import (
     ChatMessage,
     ChatMessageCreate,
 )
+
+class PrizeController(BalanceController):
+    
+    """
+    ------------ BONUS ---------    
+    """
+
+    @staticmethod
+    async def apply_deal_bonus(deal, user_id: int, use_bonus: Optional[PrizeType] = None):
+        current_time = datetime.now(timezone.utc)
+        
+        if use_bonus:
+            active_bonus = await ActivePrize.get_or_none(
+                user__tg_id=user_id,
+                prize_type=use_bonus,
+                expires_at__gt=current_time
+            )
+            if not active_bonus:
+                raise APIException("Запрошенный бонус не активен или не найден", 400)
+            
+            if use_bonus in [PrizeType.DISCOUNT_3, PrizeType.DISCOUNT_5]:
+                discount_rate = Decimal("0.03") if use_bonus == PrizeType.DISCOUNT_3 else Decimal("0.05")
+                original_commission = deal.ad_uuid.price * Decimal("0.1")
+                adjusted_commission = max(original_commission - deal.ad_uuid.price * discount_rate, Decimal("0"))
+                deal.price = round(deal.ad_uuid.price + adjusted_commission, 3)
+            
+            elif use_bonus == PrizeType.INCREASED_REFFERRAL_BONUS_7:
+                deal.referral_bonus_multiplier = Decimal("0.47")
+
+            await active_bonus.delete()
+        return deal
+
 
 class OrderController(BaseUserController):
     @staticmethod
@@ -252,8 +286,6 @@ class OrderController(BaseUserController):
 
         deal = deal_list[0]
         
-
-        
         deal_val = DealOut(
             uuid=deal.uuid,
             status=deal.status,
@@ -275,45 +307,34 @@ class OrderController(BaseUserController):
 
 
     @staticmethod
-    async def confirm_deal(deal_uuid: UUID, user_id: int) -> Deals:
+    async def confirm_deal(deal_uuid: UUID, user_id: int, use_bonus: Optional[PrizeType]) -> Deals:
         try:
             user = await UserController.get_by_tg_id(user_id)
             async with in_transaction():
                 deal = await Deals.get(uuid=deal_uuid).select_related(
                     "buyer_id", "seller_id", "ad_uuid"
                 )
+
+                deal = await PrizeController.apply_deal_bonus(deal, user_id, use_bonus)
+
+
                 if deal.status == DealStatus.COMPLETED:
-                    raise APIException(
-                        error="Deal is already completed",
-                        status_code=400
-                    )
+                    raise APIException(error="Deal is already completed", status_code=400)
                 chat = await Chats.get_or_none(deal=deal)
                 if not chat:
-                    raise APIException(
-                        error="Chat not found for this deal",
-                        status_code=404
-                    )
+                    raise APIException(error="Chat not found for this deal", status_code=404)
 
                 if user.uuid not in [deal.buyer_id.uuid, deal.seller_id.uuid]:
-                    raise APIException(
-                        error="User is not part of this deal",
-                        status_code=403
-                    )
+                    raise APIException(error="User is not part of this deal", status_code=403)
 
                 if user.uuid == deal.buyer_id.uuid:
                     if deal.buyer_confirms:
-                        raise APIException(
-                            error="Buyer already confirmed the deal",
-                            status_code=400
-                        )
+                        raise APIException(error="Buyer already confirmed the deal", status_code=400)
                     deal.buyer_confirms = True
                     role = f"{deal.buyer_id.username}"
                 else:
                     if deal.seller_confirms:
-                        raise APIException(
-                            error="Seller already confirmed the deal",
-                            status_code=400
-                        )
+                        raise APIException(error="Seller already confirmed the deal", status_code=400)
                     deal.seller_confirms = True
                     role = f"{deal.seller_id.username}"
 
@@ -358,15 +379,15 @@ class OrderController(BaseUserController):
                     if referral:
                         ad = deal.ad_uuid
                         commission = deal.price - ad.price
-                        referral_bonus = commission * Decimal('0.4')
+                        multiplier = getattr(deal, "referral_bonus_multiplier", Decimal("0.4"))
+                        referral_bonus = commission * multiplier
                         referrer_user = referral.referrer
-                        logging.info(f"referrer tg_id: {referrer_user.tg_id} deal.currency:{deal.currency} referral_bonus: {referral_bonus}")
+                        
                         await BalanceController.update_balance(
                             user_id=referrer_user.tg_id,
                             currency=deal.currency,
                             amount=referral_bonus
                         )
-                        
                         await Transactions.create(
                             user=referrer_user,
                             amount=referral_bonus,

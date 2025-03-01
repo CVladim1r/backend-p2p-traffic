@@ -3,8 +3,9 @@ import json
 import ast
 
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, timezone
 
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
@@ -20,7 +21,7 @@ from back.utils.cryptobot import crypto_service
 from back.controllers.balance import BalanceController
 from back.models.transactions import Transactions
 from back.models.enums import TransactionStatus
-
+from back.models import ActivePrize
 
 logging.basicConfig(
     level=logging.INFO,
@@ -52,6 +53,14 @@ app.add_middleware(
 
 register_tortoise(app, add_exception_handlers=True, config=TORTOISE_ORM)
 
+async def cleanup_expired_prizes():
+    await ActivePrize.filter(expires_at__lt=datetime.now(timezone.utc)).delete()
+
+@app.on_event("startup")
+async def startup_event():
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(cleanup_expired_prizes, 'interval', days=1)
+    scheduler.start()
 
 
 @app.post("/webhook/cryptobot", summary="Webhook Endpoint", description="Check API health")
@@ -132,11 +141,9 @@ async def cryptobot_webhook(request: Request):
 
     return {"status": "ok"}
 
-
-@app.get("/", summary="Root Endpoint", description="Check API health", dependencies=[Depends(JWTBearer())])
-async def root():
-    return {"message": "P2P backend is running"}
-
+# @app.get("/", summary="Root Endpoint", description="Check API health", dependencies=[Depends(JWTBearer())])
+# async def root():
+#     return {"message": "P2P backend is running"}
 
 @app.exception_handler(APIException)
 async def api_exception_handler(request: Request, exc: APIException):
@@ -145,13 +152,11 @@ async def api_exception_handler(request: Request, exc: APIException):
         content={"error": exc.error},
     )
 
-
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
         status_code=exc.status_code,
         content={"error": exc.detail},
     )
-
 
 app.include_router(router, prefix=app_base)

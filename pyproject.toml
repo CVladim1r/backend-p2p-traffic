@@ -20,6 +20,7 @@ aiohttp = "^3.9.5"
 aerich = "^0.7.2"
 requests = "^2.32.3"
 aiocryptopay = "^0.4.7"
+apscheduler = "^3.11.0"
 
 [tool.aerich]
 tortoise_orm = "back.config.TORTOISE_ORM"

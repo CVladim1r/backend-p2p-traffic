@@ -1,11 +1,13 @@
 import random
 
+from decimal import Decimal
 from datetime import datetime, timezone, timedelta
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Query
 
 from back.controllers.user import UserController
-from back.models import Users, ActivePrize
-from back.models.enums import PrizeType
+from back.controllers.balance import BalanceController
+from back.models import ActivePrize
+from back.models.enums import PrizeType, TransactionCurrencyType
 from back.errors import APIExceptionModel, APIException
 from back.views.prize import PrizeOut
 
@@ -39,12 +41,24 @@ async def spin_roulette(
     prizes = list(PrizeType)
     selected_prize = random.choice(prizes)
 
-    expires_at = current_time + timedelta(days=1)
-    await ActivePrize.create(
-        user=user,
-        prize_type=selected_prize,
-        expires_at=expires_at
-    )
+    expires_at = current_time + timedelta(days=3)
+
+    if selected_prize == PrizeType.DEPOSIT_03:
+        try:
+            await BalanceController.update_balance(
+                user_id=user.tg_id,
+                currency=TransactionCurrencyType.USD,
+                amount=Decimal('0.3')
+            )
+            expires_at = current_time
+        except Exception as e:
+            raise APIException(f"Failed to apply deposit: {str(e)}", 500)
+    else:
+        await ActivePrize.create(
+            user=user,
+            prize_type=selected_prize,
+            expires_at=expires_at
+        )
 
     return PrizeOut(
         prize_type=selected_prize,
