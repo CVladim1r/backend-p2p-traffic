@@ -159,6 +159,7 @@ async def confirm_deal(
     )
     return deal
 
+
 @router.get(
     "/deals/{deal_uuid}/chat",
     response_model=ChatOut,
