@@ -119,7 +119,6 @@ class BalanceController:
         
         return check.bot_check_url
 
-        
     @staticmethod
     async def update_balance(
         user_id: int,
@@ -146,7 +145,6 @@ class BalanceController:
         balance.balance = new_balance
         await balance.save()
         
-
     @staticmethod
     async def reserve_funds(user_id: int, currency: TransactionCurrencyType, amount: Decimal):
         balance, _ = await UserBalance.get_or_create(

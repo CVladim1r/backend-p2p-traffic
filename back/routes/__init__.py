@@ -8,6 +8,7 @@ from .ads import router as orders_router
 from .balance import router as balance_router
 from .adsgram import router as adsgram_router
 from .referrals import router as referrals_router
+from .prize import router as prize_router
 
 router = APIRouter()
 
@@ -19,3 +20,4 @@ router.include_router(balance_router, prefix="/balance", tags=["Balance"])
 router.include_router(referrals_router, prefix="/referrals", tags=["Referrals"])
 router.include_router(metrics_router, prefix="/metrics", tags=["Metrics"])
 router.include_router(other_router, prefix="/other", tags=["Additional"])
+router.include_router(prize_router, prefix="/prize", tags=["Prize"])
