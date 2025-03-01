@@ -44,10 +44,13 @@ async def create_user(
         if user_data.referrer_id and user_data.referrer_id != user_data.tg_id:
             referrer = await UserController.get_user_by_tg_id(user_data.referrer_id)
             if referrer:
-                await Referrals.create(
-                    referrer=referrer,
-                    referred=user
-                )
+                existing_referral = await Referrals.filter(referred=user).first()
+                if existing_referral:
+                    logging.info(
+                        f"User {user.tg_id} already has referrer: {existing_referral.referrer.tg_id}"
+                    )
+                else:
+                    await Referrals.create(referrer=referrer, referred=user)
 
         return StartUserOut.model_validate(user)
     except Exception as error:

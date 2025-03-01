@@ -11,7 +11,8 @@ class Referrals(models.Model):
     referred = fields.ForeignKeyField(
         "models.Users", 
         related_name="referred_by",
-        db_column="referred_id"
+        db_column="referred_id",
+        unique=True
     )
     
     created_at = fields.DatetimeField(auto_now_add=True)
