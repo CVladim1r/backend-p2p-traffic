@@ -52,6 +52,8 @@ class Deals(models.Model):
 
     is_frozen = fields.BooleanField(default=False)
     support_request = fields.BooleanField(default=False)
+    bonus = fields.ForeignKeyField("models.ActivePrize", related_name="deals", null=True)
+
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
 
@@ -60,4 +62,5 @@ class Deals(models.Model):
         indexes = [
             ("status", "buyer_id", "created_at"),
             ("status", "seller_id", "created_at")
+            
         ]

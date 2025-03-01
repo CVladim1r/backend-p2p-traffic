@@ -103,11 +103,16 @@ async def get_ad(
 async def create_deal(
     deal_data: DealCreate, 
     user_in: AuthUserOut = Depends(get_user),
+    bonus_id: Optional[uuid.UUID] = Query(
+        None, 
+        description="UUID бонуса для использования при создании сделки"
+    )
 ):
     try:
         deal = await OrderController.create_deal(
             user_id=user_in.tg_id, 
-            deal_data=deal_data
+            deal_data=deal_data,
+            bonus_id=bonus_id 
         )
         return deal
     except APIException as e:
@@ -146,13 +151,11 @@ async def get_deal(
 )
 async def confirm_deal(
     deal_uuid: uuid.UUID,
-    user: AuthUserOut = Depends(get_user),
-    use_bonus: Optional[PrizeType] = Query(None, description="Тип бонуса для использования")
+    user: AuthUserOut = Depends(get_user)
 ):
     deal = await OrderController.confirm_deal(
         deal_uuid=deal_uuid,
         user_id=user.tg_id,
-        use_bonus=use_bonus
     )
     return deal
 

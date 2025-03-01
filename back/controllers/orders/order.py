@@ -200,8 +200,7 @@ class OrderController(BaseUserController):
     """
 
     @staticmethod
-    async def create_deal(deal_data: DealCreate, user_id: int) -> Deals: 
-        
+    async def create_deal(deal_data: DealCreate, user_id: int, bonus_id: Optional[UUID] = None) -> Deals:
         try:
             user = await UserController.get_by_tg_id(tg_id=user_id)
         except DoesNotExist:
@@ -213,17 +212,36 @@ class OrderController(BaseUserController):
             raise APIException(error="Ad not found", status_code=404)
         logging.info(f"user: {user}")
 
-        price_plus_commision=ad.price*Decimal("0.1")+ad.price
+        base_commission = ad.price * Decimal("0.1")
+        price_plus_commission = ad.price + base_commission
+        bonus_obj = None
+
+        if bonus_id:
+            current_time = datetime.now(timezone.utc)
+            bonus_obj = await ActivePrize.get_or_none(
+                uuid=bonus_id,
+                user__tg_id=user_id,
+                expires_at__gt=current_time
+            )
+            if not bonus_obj:
+                raise APIException("Выбранный бонус не найден или просрочен", 400)
+            
+            if bonus_obj.prize_type in [PrizeType.DISCOUNT_3, PrizeType.DISCOUNT_5]:
+                discount_rate = Decimal("0.03") if bonus_obj.prize_type == PrizeType.DISCOUNT_3 else Decimal("0.05")
+                adjusted_commission = max(base_commission - (ad.price * discount_rate), Decimal("0"))
+                price_plus_commission = round(ad.price + adjusted_commission, 3)
 
         async with in_transaction():
             deal = await Deals.create(
                 ad_uuid=ad,
                 buyer_id=user,
                 seller_id=ad.user_id,
-                price=round(price_plus_commision, 3),
+                price=round(price_plus_commission, 3),
                 status=DealStatus.PENDING,
-                currency=ad.currency_type
+                currency=ad.currency_type,
+                bonus=bonus_obj
             )
+
             await Chats.create(deal=deal)
             chat = await Chats.get(deal=deal)
             new_message = {
@@ -233,6 +251,7 @@ class OrderController(BaseUserController):
                 "text": "Вы успешно разместили ордер. Выполните условия и дождитесь подтверждения обеих сторон. В случае возниконовения спорной ситуации вы можете мы поможем Вам разобраться в ситуации.",
                 "timestamp": datetime.utcnow().isoformat()
             }
+            
         chat.messages.append(new_message)
         await chat.save()
 
@@ -307,15 +326,18 @@ class OrderController(BaseUserController):
 
 
     @staticmethod
-    async def confirm_deal(deal_uuid: UUID, user_id: int, use_bonus: Optional[PrizeType]) -> Deals:
+    async def confirm_deal(deal_uuid: UUID, user_id: int) -> Deals:
         try:
             user = await UserController.get_by_tg_id(user_id)
             async with in_transaction():
                 deal = await Deals.get(uuid=deal_uuid).select_related(
-                    "buyer_id", "seller_id", "ad_uuid"
+                    "buyer_id", "seller_id", "ad_uuid", "bonus"
                 )
 
-                deal = await PrizeController.apply_deal_bonus(deal, user_id, use_bonus)
+                if deal.bonus:
+                    deal = await PrizeController.apply_deal_bonus(deal, user_id, deal.bonus.prize_type)
+                    deal.bonus = None
+                    await deal.save()
 
 
                 if deal.status == DealStatus.COMPLETED:
@@ -398,6 +420,7 @@ class OrderController(BaseUserController):
 
                     deal.status = DealStatus.COMPLETED
                     await deal.save()
+
 
                     completion_message = {
                         "sender_name": "system",
