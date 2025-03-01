@@ -47,7 +47,7 @@ async def spin_roulette(
         try:
             await BalanceController.update_balance(
                 user_id=user.tg_id,
-                currency=TransactionCurrencyType.USD,
+                currency=TransactionCurrencyType.USDT,
                 amount=Decimal('0.3')
             )
             expires_at = current_time

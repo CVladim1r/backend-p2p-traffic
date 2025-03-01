@@ -25,26 +25,7 @@ async def create_deposit(
     currency: TransactionCurrencyType,
     amount: float,
     user_id: int = Depends(JWTBearer()),
-    use_deposit_bonus: Optional[bool] = Query(False, description="Использовать бонус DEPOSIT_03"),
 ) -> UserBalanceOut:
-    if use_deposit_bonus:
-        current_time = datetime.now(timezone.utc)
-        bonus = await ActivePrize.get_or_none(
-            user__tg_id=user_id,
-            prize_type=PrizeType.DEPOSIT_03,
-            expires_at__gt=current_time
-        )
-        if bonus:
-            amount_bonus=Decimal("0.3")
-            await BalanceController.update_balance(
-                user_id=user_id,
-                currency=TransactionCurrencyType.USDT,
-                amount=amount_bonus
-            )
-            await bonus.delete()
-        else:
-            raise APIException("Бонус для депозита не найден или просрочен", 400)
-        
     deposit_url = await BalanceController.create_deposit(user_id, Decimal(amount), currency)
     return {"balance": str(deposit_url)}
 
